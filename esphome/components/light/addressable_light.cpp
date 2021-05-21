@@ -12,7 +12,7 @@ void AddressableLight::call_setup() {
 #ifdef ESPHOME_LOG_HAS_VERY_VERBOSE
   this->set_interval(5000, [this]() {
     const char *name = this->state_parent_ == nullptr ? "" : this->state_parent_->get_name().c_str();
-    ESP_LOGVV(TAG, "Addressable Light '%s' (effect_active=%s)", name, YESNO(this->effect_active_));
+    ESP_LOGVV(TAG, "Addressable Light '%s'", name);
     for (int i = 0; i < this->size(); i++) {
       auto color = this->get(i);
       ESP_LOGVV(TAG, "  [%2d] Color: R=%3u G=%3u B=%3u W=%3u", i, color.get_red_raw(), color.get_green_raw(),
@@ -38,9 +38,6 @@ void AddressableLight::update_state(LightState *state) {
 
   this->last_transition_progress_ = 0.0f;
   this->accumulated_alpha_ = 0.0f;
-
-  if (this->is_effect_active())
-    return;
 
   // don't use LightState helper, gamma correction+brightness is handled by ESPColorView
 

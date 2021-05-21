@@ -50,8 +50,6 @@ class AddressableLight : public LightOutput, public Component {
       amnt = this->size();
     this->range(amnt, this->size()) = this->range(0, -amnt);
   }
-  bool is_effect_active() const { return this->effect_active_; }
-  void set_effect_active(bool effect_active) { this->effect_active_ = effect_active; }
   void set_correction(float red, float green, float blue, float white = 1.0f) {
     this->correction_.set_max_brightness(Color(uint8_t(roundf(red * 255.0f)), uint8_t(roundf(green * 255.0f)),
                                                uint8_t(roundf(blue * 255.0f)), uint8_t(roundf(white * 255.0f))));
@@ -83,7 +81,6 @@ class AddressableLight : public LightOutput, public Component {
   }
   virtual ESPColorView get_view_internal(int32_t index) const = 0;
 
-  bool effect_active_{false};
   ESPColorCorrection correction_{};
 #ifdef USE_POWER_SUPPLY
   power_supply::PowerSupplyRequester power_;

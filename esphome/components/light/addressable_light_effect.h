@@ -31,11 +31,9 @@ class AddressableLightEffect : public LightEffect {
  public:
   explicit AddressableLightEffect(const std::string &name) : LightEffect(name) {}
   void start_internal() override {
-    this->get_addressable_()->set_effect_active(true);
     this->get_addressable_()->clear_effect_data();
     this->start();
   }
-  void stop() override { this->get_addressable_()->set_effect_active(false); }
   virtual void apply(AddressableLight &it, const Color &current_color) = 0;
   void apply() override {
     LightColorValues color = this->state_->remote_values;
