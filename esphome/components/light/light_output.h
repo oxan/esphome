@@ -17,6 +17,13 @@ class LightOutput {
 
   virtual void setup_state(LightState *state) {}
 
+  /// Called on every update of the current values of the associated LightState,
+  /// can optionally be used to do processing on this change.
+  virtual void update_state(LightState *state) {}
+
+  /// Called from loop() every time the current value of the light state changed,
+  /// should write the new state to hardware. Every call to write_state() is
+  /// preceded by (at least) one call to update_state().
   virtual void write_state(LightState *state) = 0;
 };
 

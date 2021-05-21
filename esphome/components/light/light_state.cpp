@@ -107,6 +107,7 @@ void LightState::loop() {
       this->current_values = this->transformer_->get_values();
       this->remote_values = this->transformer_->get_remote_values();
     }
+    this->output_->update_state(this);
     this->next_write_ = true;
   }
 
@@ -124,7 +125,6 @@ LightColorValues LightState::get_remote_values() { return this->remote_values; }
 
 void LightState::publish_state() {
   this->remote_values_callback_.call();
-  this->next_write_ = true;
 }
 
 LightOutput *LightState::get_output() const { return this->output_; }
@@ -233,6 +233,7 @@ void LightState::set_immediately_(const LightColorValues &target, bool set_remot
   if (set_remote_values) {
     this->remote_values = target;
   }
+  this->output_->update_state(this);
   this->next_write_ = true;
 }
 

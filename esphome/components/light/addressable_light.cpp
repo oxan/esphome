@@ -12,8 +12,7 @@ void AddressableLight::call_setup() {
 #ifdef ESPHOME_LOG_HAS_VERY_VERBOSE
   this->set_interval(5000, [this]() {
     const char *name = this->state_parent_ == nullptr ? "" : this->state_parent_->get_name().c_str();
-    ESP_LOGVV(TAG, "Addressable Light '%s' (effect_active=%s next_show=%s)", name, YESNO(this->effect_active_),
-              YESNO(this->next_show_));
+    ESP_LOGVV(TAG, "Addressable Light '%s' (effect_active=%s)", name, YESNO(this->effect_active_));
     for (int i = 0; i < this->size(); i++) {
       auto color = this->get(i);
       ESP_LOGVV(TAG, "  [%2d] Color: R=%3u G=%3u B=%3u W=%3u", i, color.get_red_raw(), color.get_green_raw(),
@@ -32,7 +31,7 @@ Color esp_color_from_light_color_values(LightColorValues val) {
   return Color(r, g, b, w);
 }
 
-void AddressableLight::write_state(LightState *state) {
+void AddressableLight::update_state(LightState *state) {
   auto val = state->current_values;
   auto max_brightness = static_cast<uint8_t>(roundf(val.get_brightness() * val.get_state() * 255.0f));
   this->correction_.set_local_brightness(max_brightness);
@@ -98,8 +97,6 @@ void AddressableLight::write_state(LightState *state) {
         led = add + led.get() * inv_alpha8;
     }
   }
-
-  this->schedule_show();
 }
 
 }  // namespace light
