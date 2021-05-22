@@ -133,7 +133,7 @@ async def setup_light_core_(light_var, output_var, config):
 
     if CONF_POWER_SUPPLY in config:
         var_ = await cg.get_variable(config[CONF_POWER_SUPPLY])
-        cg.add(output_var.set_power_supply(var_))
+        cg.add(light_var.set_power_supply(var_))
 
     if CONF_MQTT_ID in config:
         mqtt_ = cg.new_Pvariable(config[CONF_MQTT_ID], light_var)

@@ -112,6 +112,14 @@ void LightState::loop() {
   }
 
   if (this->next_write_) {
+#ifdef USE_POWER_SUPPLY
+    if (this->current_values.is_on()) {
+      this->power_.request();
+    } else {
+      this->power_.unrequest();
+    }
+#endif
+
     this->output_->write_state(this);
     this->next_write_ = false;
   }

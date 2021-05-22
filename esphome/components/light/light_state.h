@@ -9,6 +9,10 @@
 #include "light_traits.h"
 #include "light_transformer.h"
 
+#ifdef USE_POWER_SUPPLY
+#include "esphome/components/power_supply/power_supply.h"
+#endif
+
 namespace esphome {
 namespace light {
 
@@ -110,6 +114,11 @@ class LightState : public Nameable, public Component {
   void dump_json(JsonObject &root);
 #endif
 
+#ifdef USE_POWER_SUPPLY
+  /// Set the power supply.
+  void set_power_supply(power_supply::PowerSupply *power_supply) { this->power_.set_parent(power_supply); }
+#endif
+
   /// Set the default transition length, i.e. the transition length when no transition is provided.
   void set_default_transition_length(uint32_t default_transition_length);
 
@@ -197,6 +206,10 @@ class LightState : public Nameable, public Component {
    */
   CallbackManager<void()> target_state_reached_callback_{};
 
+#ifdef USE_POWER_SUPPLY
+  /// Power supply for this light.
+  power_supply::PowerSupplyRequester power_;
+#endif
   /// Default transition length for all transitions in ms.
   uint32_t default_transition_length_{};
   /// Gamma correction factor for the light.
