@@ -10,10 +10,6 @@
 #include "light_state.h"
 #include "transformers.h"
 
-#ifdef USE_POWER_SUPPLY
-#include "esphome/components/power_supply/power_supply.h"
-#endif
-
 namespace esphome {
 namespace light {
 
@@ -66,33 +62,15 @@ class AddressableLight : public LightOutput, public Component {
   void update_state(LightState *state) override;
   void schedule_show() { this->state_parent_->next_write_ = true; }
 
-#ifdef USE_POWER_SUPPLY
-  void set_power_supply(power_supply::PowerSupply *power_supply) { this->power_.set_parent(power_supply); }
-#endif
-
   void call_setup() override;
 
  protected:
   friend class AddressableLightTransformer;
 
-  void mark_shown_() {
-#ifdef USE_POWER_SUPPLY
-    for (auto c : *this) {
-      if (c.get().is_on()) {
-        this->power_.request();
-        return;
-      }
-    }
-    this->power_.unrequest();
-#endif
-  }
   virtual ESPColorView get_view_internal(int32_t index) const = 0;
 
   bool effect_active_{false};
   ESPColorCorrection correction_{};
-#ifdef USE_POWER_SUPPLY
-  power_supply::PowerSupplyRequester power_;
-#endif
   LightState *state_parent_{nullptr};
 };
 

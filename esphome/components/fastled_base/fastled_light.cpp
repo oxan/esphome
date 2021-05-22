@@ -29,7 +29,6 @@ void FastLEDLightOutput::write_state(light::LightState *state) {
     return;
   }
   this->last_refresh_ = now;
-  this->mark_shown_();
 
   ESP_LOGVV(TAG, "Writing RGB values to bus...");
   this->controller_->showLeds();

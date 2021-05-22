@@ -54,7 +54,6 @@ class PartitionLightOutput : public light::AddressableLight {
     for (auto seg : this->segments_) {
       seg.get_src()->schedule_show();
     }
-    this->mark_shown_();
   }
 
  protected:

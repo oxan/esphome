@@ -83,7 +83,6 @@ class NeoPixelBusLightOutputBase : public light::AddressableLight {
   }
 
   void write_state(light::LightState *state) override {
-    this->mark_shown_();
     this->controller_->Dirty();
 
     this->controller_->Show();
