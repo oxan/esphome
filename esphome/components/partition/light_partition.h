@@ -44,11 +44,6 @@ class PartitionLightOutput : public light::AddressableLight {
     auto &last_seg = this->segments_[this->segments_.size() - 1];
     return last_seg.get_dst_offset() + last_seg.get_size();
   }
-  void clear_effect_data() override {
-    for (auto &seg : this->segments_) {
-      seg.get_src()->clear_effect_data();
-    }
-  }
   light::LightTraits get_traits() override { return this->segments_[0].get_src()->get_traits(); }
   void write_state(light::LightState *state) override {
     for (auto seg : this->segments_) {

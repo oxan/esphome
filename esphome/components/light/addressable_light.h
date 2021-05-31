@@ -20,7 +20,6 @@ class AddressableLight : public LightOutput, public Component {
   virtual int32_t size() const = 0;
   ESPColorView operator[](int32_t index) const { return this->get_view_internal(interpret_index(index, this->size())); }
   ESPColorView get(int32_t index) { return this->get_view_internal(interpret_index(index, this->size())); }
-  virtual void clear_effect_data() = 0;
   ESPRangeView range(int32_t from, int32_t to) {
     from = interpret_index(from, this->size());
     to = interpret_index(to, this->size());

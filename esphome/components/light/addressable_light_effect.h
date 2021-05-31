@@ -32,7 +32,8 @@ class AddressableLightEffect : public LightEffect {
   explicit AddressableLightEffect(const std::string &name) : LightEffect(name) {}
   void start_internal() override {
     this->get_addressable_()->set_effect_active(true);
-    this->get_addressable_()->clear_effect_data();
+    for (auto view : *this->get_addressable_())
+      view.set_effect_data(0);
     this->start();
   }
   void stop() override { this->get_addressable_()->set_effect_active(false); }
