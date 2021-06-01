@@ -6,6 +6,7 @@
 namespace esphome {
 
 inline static uint8_t esp_scale8(uint8_t i, uint8_t scale) { return (uint16_t(i) * (1 + uint16_t(scale))) / 256; }
+inline static uint8_t to_uint8(float x) { return static_cast<uint8_t>(roundf(x * 255.0f)); }
 
 struct Color {
   union {

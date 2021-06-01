@@ -70,7 +70,7 @@ void AddressableLight::update_state(LightState *state) {
     // our transition will handle brightness, disable brightness in correction.
     this->corrected_values_->set_brightness(255);
     uint8_t orig_w = target_color.w;
-    target_color *= static_cast<uint8_t>(roundf(end_values.get_brightness() * end_values.get_state() * 255.0f));
+    target_color *= to_uint8(end_values.get_brightness() * end_values.get_state());
     // w is not scaled by brightness
     target_color.w = orig_w;
 

@@ -9,7 +9,7 @@ void ESPColorCorrection::set_gamma_correction(float gamma) {
 
   for (uint16_t i = 0; i < 256; i++) {
     // corrected = val ^ gamma
-    auto corrected = static_cast<uint8_t>(roundf(255.0f * gamma_correct(i / 255.0f, gamma)));
+    auto corrected = to_uint8(gamma_correct(i / 255.0f, gamma));
     this->gamma_table_[i] = corrected;
   }
   if (gamma == 0.0f) {
@@ -19,7 +19,7 @@ void ESPColorCorrection::set_gamma_correction(float gamma) {
   }
   for (uint16_t i = 0; i < 256; i++) {
     // val = corrected ^ (1/gamma)
-    auto uncorrected = static_cast<uint8_t>(roundf(255.0f * powf(i / 255.0f, 1.0f / gamma)));
+    auto uncorrected = to_uint8(powf(i / 255.0f, 1.0f / gamma));
     this->gamma_reverse_table_[i] = uncorrected;
   }
 }
