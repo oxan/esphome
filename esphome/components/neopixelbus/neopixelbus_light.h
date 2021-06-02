@@ -100,11 +100,8 @@ class NeoPixelBusLightOutputBase : public light::AddressableLight {
   // ========== INTERNAL METHODS ==========
   void setup() override {
     this->effect_data_ = new uint8_t[this->size()];
-    this->light_values_ = this->create_light_values();
 
-    for (int i = 0; i < this->size(); i++) {
-      (*this)[i] = Color(0, 0, 0, 0);
-    }
+    memset(this->controller_->Pixels(), this->controller_->PixelsSize(), 0);
 
     this->controller_->Begin();
   }
@@ -128,10 +125,6 @@ class NeoPixelBusLightOutputBase : public light::AddressableLight {
   }
 
  protected:
-  virtual light::AddressableLightValues* create_light_values() = 0;
-  light::AddressableLightValues &get_light_values() override { return *light_values_; }
-
-  light::AddressableLightValues *light_values_;
   NeoPixelBus<T_COLOR_FEATURE, T_METHOD> *controller_{nullptr};
   uint8_t *effect_data_{nullptr};
   uint8_t rgb_offsets_[4]{0, 1, 2, 3};
@@ -148,7 +141,7 @@ class NeoPixelRGBLightOutput : public NeoPixelBusLightOutputBase<T_METHOD, T_COL
   }
 
  protected:
-  virtual light::AddressableLightValues* create_light_values() override {
+  virtual light::AddressableLightValues* setup_light_values() override {
     return new NeoPixelBusLightValues{this->rgb_offsets_, 3ULL, this->controller_->Pixels(), this->effect_data_};
   }
 };
@@ -165,7 +158,7 @@ class NeoPixelRGBWLightOutput : public NeoPixelBusLightOutputBase<T_METHOD, T_CO
   }
 
  protected:
-  virtual light::AddressableLightValues* create_light_values() override {
+  virtual light::AddressableLightValues* setup_light_values() override {
     return new NeoPixelBusLightValues{this->rgb_offsets_, 4ULL, this->controller_->Pixels(), this->effect_data_};
   }
 };

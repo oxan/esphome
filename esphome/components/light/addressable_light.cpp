@@ -8,13 +8,14 @@ static const char *TAG = "light.addressable";
 
 void AddressableLight::call_setup() {
   this->setup();
+  this->light_values_ = this->setup_light_values();
 
 #ifdef ESPHOME_LOG_HAS_VERY_VERBOSE
   this->set_interval(5000, [this]() {
     const char *name = this->state_parent_ == nullptr ? "" : this->state_parent_->get_name().c_str();
     ESP_LOGVV(TAG, "Addressable Light '%s'", name);
     for (int i = 0; i < this->size(); i++) {
-      auto color = this->get_light_values().get(i);
+      auto color = this->light_values_->get(i);
       ESP_LOGVV(TAG, "  [%2d] Color: R=%3u G=%3u B=%3u W=%3u", i, color.red, color.green, color.blue, color.white);
     }
     ESP_LOGVV(TAG, "");
@@ -23,7 +24,7 @@ void AddressableLight::call_setup() {
 }
 
 void AddressableLight::setup_state(LightState *state) {
-  this->corrected_values_ = new ColorCorrectingLightValues(this->get_light_values(), state->get_color_correction(), 255);
+  this->corrected_values_ = new ColorCorrectingLightValues(*this->light_values_, state->get_color_correction(), 255);
   this->state_parent_ = state;
 }
 

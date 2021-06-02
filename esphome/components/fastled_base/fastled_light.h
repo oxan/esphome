@@ -18,14 +18,7 @@ namespace fastled_base {
 
 class FastLEDLightValues : public light::AddressableLightValues {
  public:
-  FastLEDLightValues(int count) {
-    this->leds_ = new CRGB[count];
-    this->effect_data_ = new uint8_t[count];
-  }
-  ~FastLEDLightValues() {
-    delete this->leds_;
-    delete this->effect_data_;
-  }
+  FastLEDLightValues(CRGB* leds, uint8_t *effect_data) : leds_{leds}, effect_data_{effect_data} {}
 
   uint8_t get_red(int32_t index) const override { return leds_[index].r; }
   uint8_t get_green(int32_t index) const override { return leds_[index].g; }
@@ -46,8 +39,6 @@ class FastLEDLightValues : public light::AddressableLightValues {
   }
 
  protected:
-  friend class FastLEDLightOutput;
-
   CRGB *leds_{nullptr};
   uint8_t *effect_data_{nullptr};
 };
@@ -64,10 +55,10 @@ class FastLEDLightOutput : public light::AddressableLight {
   CLEDController &add_leds(CLEDController *controller, int num_leds) {
     this->controller_ = controller;
     this->num_leds_ = num_leds;
-    this->light_values_ = new FastLEDLightValues(num_leds);
+    this->leds_ = new CRGB[num_leds];
 
     for (int i = 0; i < this->num_leds_; i++)
-      this->light_values_->leds_[i] = CRGB::Black;
+      this->leds_[i] = CRGB::Black;
 
     return *this->controller_;
   }
@@ -253,10 +244,13 @@ class FastLEDLightOutput : public light::AddressableLight {
 
  protected:
   int32_t size() const override { return this->num_leds_; }
-  light::AddressableLightValues& get_light_values() override { return *this->light_values_; }
+  light::AddressableLightValues* setup_light_values() override {
+    return new FastLEDLightValues{this->leds_, this->effect_data_};
+  }
 
   CLEDController *controller_{nullptr};
-  FastLEDLightValues *light_values_{nullptr};
+  CRGB *leds_{nullptr};
+  uint8_t *effect_data_{nullptr};
   int num_leds_{0};
   uint32_t last_refresh_{0};
   optional<uint32_t> max_refresh_rate_{};

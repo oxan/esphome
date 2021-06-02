@@ -20,7 +20,7 @@ class AddressableLight : public LightOutput, public Component {
 
   void schedule_show() { this->state_parent_->next_write_ = true; }
 
-  ESPRangeView get_raw_pixels() { return ESPRangeView{this->get_light_values(), 0, this->size()}; }
+  ESPRangeView get_raw_pixels() { return ESPRangeView{*this->light_values_, 0, this->size()}; }
   ESPRangeView get_pixels() { return ESPRangeView{*this->corrected_values_, 0, this->size()}; }
 
   // Compatibility methods
@@ -42,8 +42,9 @@ class AddressableLight : public LightOutput, public Component {
 
  protected:
   virtual int32_t size() const = 0;
-  virtual AddressableLightValues& get_light_values() = 0;
+  virtual AddressableLightValues* setup_light_values() = 0;
 
+  AddressableLightValues *light_values_{nullptr};
   ColorCorrectingLightValues *corrected_values_{nullptr};
   LightState *state_parent_{nullptr};
   float last_transition_progress_{0.0f};

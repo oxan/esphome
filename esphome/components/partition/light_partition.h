@@ -54,7 +54,7 @@ class PartitionedLightValues : public light::AddressableLightValues {
 
 class PartitionLightOutput : public light::AddressableLight {
  public:
-  explicit PartitionLightOutput(std::vector<AddressableSegment> segments) : segments_(std::move(segments)), light_values_(segments_) {
+  explicit PartitionLightOutput(std::vector<AddressableSegment> segments) : segments_(std::move(segments)) {
     int32_t off = 0;
     for (auto &seg : this->segments_) {
       seg.set_dst_offset(off);
@@ -73,10 +73,11 @@ class PartitionLightOutput : public light::AddressableLight {
   }
 
  protected:
-  light::AddressableLightValues& get_light_values() override { return this->light_values_; }
+  light::AddressableLightValues* setup_light_values() override {
+    return new PartitionedLightValues{this->segments_};
+  }
 
   std::vector<AddressableSegment> segments_;
-  PartitionedLightValues light_values_;
 };
 
 }  // namespace partition
