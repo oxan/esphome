@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/core/optional.h"
 #include "esphome/core/preferences.h"
+#include "esp_color_correction.h"
 #include "light_effect.h"
 #include "light_color_values.h"
 #include "light_call.h"
@@ -122,9 +123,10 @@ class LightState : public Nameable, public Component {
   /// Set the default transition length, i.e. the transition length when no transition is provided.
   void set_default_transition_length(uint32_t default_transition_length);
 
-  /// Set the gamma correction factor
+  /// Set the gamma and color correction
   void set_gamma_correct(float gamma_correct);
-  float get_gamma_correct() const { return this->gamma_correct_; }
+  void set_color_correction(float red, float green, float blue, float white = 1.0f);
+  const ESPColorCorrection& get_color_correction() const { return this->correction_; }
 
   /// Set the restore mode of this light
   void set_restore_mode(LightRestoreMode restore_mode);
@@ -138,7 +140,7 @@ class LightState : public Nameable, public Component {
   /// Add effects for this light state.
   void add_effects(const std::vector<LightEffect *> &effects);
 
-  /// The result of all the current_values_as_* methods have gamma correction applied.
+  /// The result of all the current_values_as_* methods have gamma and color correction applied.
   void current_values_as_binary(bool *binary);
 
   void current_values_as_brightness(float *brightness);
@@ -212,8 +214,8 @@ class LightState : public Nameable, public Component {
 #endif
   /// Default transition length for all transitions in ms.
   uint32_t default_transition_length_{};
-  /// Gamma correction factor for the light.
-  float gamma_correct_{};
+  /// Color and gamma correction for the light.
+  ESPColorCorrection correction_{};
   /// Restore mode of the light.
   LightRestoreMode restore_mode_;
   /// List of effects for this light.

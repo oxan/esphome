@@ -68,7 +68,7 @@ template<typename... Ts> class DimRelativeAction : public Action<Ts...> {
     auto call = this->parent_->make_call();
     float rel = this->relative_brightness_.value(x...);
     float cur;
-    this->parent_->remote_values.as_brightness(&cur);
+    this->parent_->remote_values.as_brightness(&cur, this->parent_->get_color_correction());
     float new_brightness = clamp(cur + rel, 0.0f, 1.0f);
     call.set_state(new_brightness != 0.0f);
     call.set_brightness(new_brightness);

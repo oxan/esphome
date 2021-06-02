@@ -88,6 +88,9 @@ BRIGHTNESS_ONLY_LIGHT_SCHEMA = LIGHT_SCHEMA.extend(
 
 RGB_LIGHT_SCHEMA = BRIGHTNESS_ONLY_LIGHT_SCHEMA.extend(
     {
+        cv.Optional(CONF_COLOR_CORRECT): cv.All(
+            [cv.percentage], cv.Length(min=3, max=4)
+        ),
         cv.Optional(CONF_EFFECTS): validate_effects(RGB_EFFECTS),
     }
 )
@@ -96,9 +99,6 @@ ADDRESSABLE_LIGHT_SCHEMA = RGB_LIGHT_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(AddressableLightState),
         cv.Optional(CONF_EFFECTS): validate_effects(ADDRESSABLE_EFFECTS),
-        cv.Optional(CONF_COLOR_CORRECT): cv.All(
-            [cv.percentage], cv.Length(min=3, max=4)
-        ),
         cv.Optional(CONF_POWER_SUPPLY): cv.use_id(power_supply.PowerSupply),
     }
 )
@@ -116,6 +116,9 @@ async def setup_light_core_(light_var, output_var, config):
         )
     if CONF_GAMMA_CORRECT in config:
         cg.add(light_var.set_gamma_correct(config[CONF_GAMMA_CORRECT]))
+
+    if CONF_COLOR_CORRECT in config:
+        cg.add(light_var.set_color_correction(*config[CONF_COLOR_CORRECT]))
     effects = await cg.build_registry_list(
         EFFECTS_REGISTRY, config.get(CONF_EFFECTS, [])
     )
@@ -127,9 +130,6 @@ async def setup_light_core_(light_var, output_var, config):
     for conf in config.get(CONF_ON_TURN_OFF, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], light_var)
         await auto.build_automation(trigger, [], conf)
-
-    if CONF_COLOR_CORRECT in config:
-        cg.add(output_var.set_correction(*config[CONF_COLOR_CORRECT]))
 
     if CONF_POWER_SUPPLY in config:
         var_ = await cg.get_variable(config[CONF_POWER_SUPPLY])

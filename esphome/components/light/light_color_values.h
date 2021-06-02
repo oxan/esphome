@@ -2,6 +2,7 @@
 
 #include "esphome/core/helpers.h"
 #include "esphome/core/defines.h"
+#include "esp_color_correction.h"
 #include "light_traits.h"
 
 #ifdef USE_JSON
@@ -174,37 +175,51 @@ class LightColorValues {
   void as_binary(bool *binary) const { *binary = this->state_ == 1.0f; }
 
   /// Convert these light color values to a brightness-only representation and write them to brightness.
-  void as_brightness(float *brightness, float gamma = 0) const {
-    *brightness = gamma_correct(this->state_ * this->brightness_, gamma);
+  void as_brightness(float *brightness, const ESPColorCorrection &correction) const {
+    *brightness = correction.correct_gamma(this->state_ * this->brightness_);
   }
 
   /// Convert these light color values to an RGB representation and write them to red, green, blue.
-  void as_rgb(float *red, float *green, float *blue, float gamma = 0, bool color_interlock = false) const {
+  void as_rgb(float *red, float *green, float *blue, const ESPColorCorrection &correction, bool color_interlock = false) const {
     float brightness = this->state_ * this->brightness_;
     if (color_interlock) {
       brightness = brightness * (1.0f - this->white_);
     }
-    *red = gamma_correct(brightness * this->red_, gamma);
-    *green = gamma_correct(brightness * this->green_, gamma);
-    *blue = gamma_correct(brightness * this->blue_, gamma);
+    *red = correction.correct_red(this->red_, brightness);
+    *green = correction.correct_green(this->green_, brightness);
+    *blue = correction.correct_blue(this->blue_, brightness);
   }
 
   /// Convert these light color values to an RGBW representation and write them to red, green, blue, white.
-  void as_rgbw(float *red, float *green, float *blue, float *white, float gamma = 0,
+  void as_rgbw(float *red, float *green, float *blue, float *white, const ESPColorCorrection &correction,
                bool color_interlock = false) const {
-    this->as_rgb(red, green, blue, gamma, color_interlock);
-    *white = gamma_correct(this->state_ * this->brightness_ * this->white_, gamma);
+    this->as_rgb(red, green, blue, correction, color_interlock);
+    *white = correction.correct_white(this->white_, this->state_ * this->brightness_);
+  }
+
+  /// Convert these light color values to a RGBW representation and return them as a Color object.
+  Color as_rgbw(const ESPColorCorrection &correction, bool color_interlock = false) const {
+    float brightness = this->state_ * this->brightness_;
+    if (color_interlock) {
+      brightness = brightness * (1.0f - this->white_);
+    }
+    uint8_t brightness8 = to_uint8(brightness);
+    return Color(correction.correct_red(to_uint8(this->red_), brightness8),
+                 correction.correct_green(to_uint8(this->green_), brightness8),
+                 correction.correct_blue(to_uint8(this->blue_), brightness8),
+                 correction.correct_white(to_uint8(this->white_), to_uint8(this->state_ * this->brightness_)));
   }
 
   /// Convert these light color values to an RGBWW representation with the given parameters.
-  void as_rgbww(float color_temperature_cw, float color_temperature_ww, float *red, float *green, float *blue,
-                float *cold_white, float *warm_white, float gamma = 0, bool constant_brightness = false,
+  void as_rgbww(float color_temperature_cw, float color_temperature_ww,
+                float *red, float *green, float *blue, float *cold_white, float *warm_white,
+                const ESPColorCorrection &correction, bool constant_brightness = false,
                 bool color_interlock = false) const {
-    this->as_rgb(red, green, blue, gamma, color_interlock);
+    this->as_rgb(red, green, blue, correction, color_interlock);
     const float color_temp = clamp(this->color_temperature_, color_temperature_cw, color_temperature_ww);
     const float ww_fraction = (color_temp - color_temperature_cw) / (color_temperature_ww - color_temperature_cw);
     const float cw_fraction = 1.0f - ww_fraction;
-    const float white_level = gamma_correct(this->state_ * this->brightness_ * this->white_, gamma);
+    const float white_level = correction.correct_gamma(this->state_ * this->brightness_ * this->white_);
     *cold_white = white_level * cw_fraction;
     *warm_white = white_level * ww_fraction;
     if (!constant_brightness) {
@@ -216,11 +231,11 @@ class LightColorValues {
 
   /// Convert these light color values to an CWWW representation with the given parameters.
   void as_cwww(float color_temperature_cw, float color_temperature_ww, float *cold_white, float *warm_white,
-               float gamma = 0, bool constant_brightness = false) const {
+               const ESPColorCorrection &correction, bool constant_brightness = false) const {
     const float color_temp = clamp(this->color_temperature_, color_temperature_cw, color_temperature_ww);
     const float ww_fraction = (color_temp - color_temperature_cw) / (color_temperature_ww - color_temperature_cw);
     const float cw_fraction = 1.0f - ww_fraction;
-    const float white_level = gamma_correct(this->state_ * this->brightness_ * this->white_, gamma);
+    const float white_level = correction.correct_gamma(this->state_ * this->brightness_ * this->white_);
     *cold_white = white_level * cw_fraction;
     *warm_white = white_level * ww_fraction;
     if (!constant_brightness) {

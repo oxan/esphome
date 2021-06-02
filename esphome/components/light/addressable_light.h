@@ -4,7 +4,6 @@
 #include "esphome/core/defines.h"
 #include "esphome/core/color.h"
 #include "addressable_light_values.h"
-#include "esp_color_correction.h"
 #include "esp_range_view.h"
 #include "light_output.h"
 #include "light_state.h"
@@ -14,11 +13,6 @@ namespace light {
 
 class AddressableLight : public LightOutput, public Component {
  public:
-  void set_correction(float red, float green, float blue, float white = 1.0f) {
-    this->correction_.set_max_brightness(Color(uint8_t(roundf(red * 255.0f)), uint8_t(roundf(green * 255.0f)),
-                                               uint8_t(roundf(blue * 255.0f)), uint8_t(roundf(white * 255.0f))));
-  }
-
   void call_setup() override;
 
   void setup_state(LightState *state) override;
@@ -50,7 +44,6 @@ class AddressableLight : public LightOutput, public Component {
   virtual int32_t size() const = 0;
   virtual AddressableLightValues& get_light_values() = 0;
 
-  ESPColorCorrection correction_{};
   ColorCorrectingLightValues *corrected_values_{nullptr};
   LightState *state_parent_{nullptr};
   float last_transition_progress_{0.0f};

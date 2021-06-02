@@ -184,8 +184,8 @@ void PrometheusHandler::light_row_(AsyncResponseStream *stream, light::LightStat
   // Brightness and RGBW
   light::LightColorValues color = obj->current_values;
   float brightness, r, g, b, w;
-  color.as_brightness(&brightness);
-  color.as_rgbw(&r, &g, &b, &w);
+  color.as_brightness(&brightness, obj->get_color_correction());
+  color.as_rgbw(&r, &g, &b, &w, obj->get_color_correction());
   stream->print(F("esphome_light_color{id=\""));
   stream->print(obj->get_object_id().c_str());
   stream->print(F("\",name=\""));

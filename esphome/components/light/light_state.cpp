@@ -81,7 +81,11 @@ void LightState::dump_config() {
   ESP_LOGCONFIG(TAG, "Light '%s'", this->get_name().c_str());
   if (this->get_traits().get_supports_brightness()) {
     ESP_LOGCONFIG(TAG, "  Default Transition Length: %.1fs", this->default_transition_length_ / 1e3f);
-    ESP_LOGCONFIG(TAG, "  Gamma Correct: %.2f", this->gamma_correct_);
+    ESP_LOGCONFIG(TAG, "  Gamma Correct: %.2f", this->correction_.get_gamma_correction());
+  }
+  if (this->get_traits().get_supports_rgb()) {
+    const Color &color_correction = this->correction_.get_max_brightness();
+    ESP_LOGCONFIG(TAG, "  Color Correction: %d / %d / %d", color_correction.red, color_correction.green, color_correction.blue);
   }
   if (this->get_traits().get_supports_color_temperature()) {
     ESP_LOGCONFIG(TAG, "  Min Mireds: %.1f", this->get_traits().get_min_mireds());
@@ -161,7 +165,12 @@ void LightState::dump_json(JsonObject &root) {
 void LightState::set_default_transition_length(uint32_t default_transition_length) {
   this->default_transition_length_ = default_transition_length;
 }
-void LightState::set_gamma_correct(float gamma_correct) { this->gamma_correct_ = gamma_correct; }
+
+void LightState::set_gamma_correct(float gamma_correct) { this->correction_.set_gamma_correction(gamma_correct); }
+void LightState::set_color_correction(float red, float green, float blue, float white) {
+  this->correction_.set_max_brightness(Color(to_uint8(red), to_uint8(green), to_uint8(blue), to_uint8(white)));
+}
+
 void LightState::set_restore_mode(LightRestoreMode restore_mode) { this->restore_mode_ = restore_mode; }
 bool LightState::supports_effects() { return !this->effects_.empty(); }
 const std::vector<LightEffect *> &LightState::get_effects() const { return this->effects_; }
@@ -174,27 +183,27 @@ void LightState::add_effects(const std::vector<LightEffect *> &effects) {
 
 void LightState::current_values_as_binary(bool *binary) { this->current_values.as_binary(binary); }
 void LightState::current_values_as_brightness(float *brightness) {
-  this->current_values.as_brightness(brightness, this->gamma_correct_);
+  this->current_values.as_brightness(brightness, this->correction_);
 }
 void LightState::current_values_as_rgb(float *red, float *green, float *blue, bool color_interlock) {
   auto traits = this->get_traits();
-  this->current_values.as_rgb(red, green, blue, this->gamma_correct_, traits.get_supports_color_interlock());
+  this->current_values.as_rgb(red, green, blue, this->correction_, traits.get_supports_color_interlock());
 }
 void LightState::current_values_as_rgbw(float *red, float *green, float *blue, float *white, bool color_interlock) {
   auto traits = this->get_traits();
-  this->current_values.as_rgbw(red, green, blue, white, this->gamma_correct_, traits.get_supports_color_interlock());
+  this->current_values.as_rgbw(red, green, blue, white, this->correction_, traits.get_supports_color_interlock());
 }
 void LightState::current_values_as_rgbww(float *red, float *green, float *blue, float *cold_white, float *warm_white,
                                          bool constant_brightness, bool color_interlock) {
   auto traits = this->get_traits();
   this->current_values.as_rgbww(traits.get_min_mireds(), traits.get_max_mireds(), red, green, blue, cold_white,
-                                warm_white, this->gamma_correct_, constant_brightness,
+                                warm_white, this->correction_, constant_brightness,
                                 traits.get_supports_color_interlock());
 }
 void LightState::current_values_as_cwww(float *cold_white, float *warm_white, bool constant_brightness) {
   auto traits = this->get_traits();
   this->current_values.as_cwww(traits.get_min_mireds(), traits.get_max_mireds(), cold_white, warm_white,
-                               this->gamma_correct_, constant_brightness);
+                               this->correction_, constant_brightness);
 }
 
 void LightState::start_effect_(uint32_t effect_index) {

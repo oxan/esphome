@@ -22,33 +22,25 @@ void AddressableLight::call_setup() {
 #endif
 }
 
-Color esp_color_from_light_color_values(LightColorValues val) {
-  auto r = static_cast<uint8_t>(roundf(val.get_red() * 255.0f));
-  auto g = static_cast<uint8_t>(roundf(val.get_green() * 255.0f));
-  auto b = static_cast<uint8_t>(roundf(val.get_blue() * 255.0f));
-  auto w = static_cast<uint8_t>(roundf(val.get_white() * val.get_state() * 255.0f));
-  return Color(r, g, b, w);
-}
-
 void AddressableLight::setup_state(LightState *state) {
-  this->correction_.set_gamma_correction(state->get_gamma_correct());
-  this->corrected_values_ = new ColorCorrectingLightValues(this->get_light_values(), this->correction_, 255);
+  this->corrected_values_ = new ColorCorrectingLightValues(this->get_light_values(), state->get_color_correction(), 255);
   this->state_parent_ = state;
 }
 
 void AddressableLight::update_state(LightState *state) {
-  auto val = state->current_values;
-  auto max_brightness = static_cast<uint8_t>(roundf(val.get_brightness() * val.get_state() * 255.0f));
-  this->corrected_values_->set_brightness(max_brightness);
-
   this->last_transition_progress_ = 0.0f;
   this->accumulated_alpha_ = 0.0f;
 
-  // don't use LightState helper, gamma correction+brightness is handled by ESPColorView
+  // Note: both the RangeView from get_pixels() and the LightColorValues.as_* helpers apply color+gamma
+  // correction, so use exactly one of them.
+
+  // Set the brightness used by color correction for future writes through get_pixels().
+  auto val = state->current_values;
+  this->corrected_values_->set_brightness(to_uint8(state->current_values.get_state() * state->current_values.get_brightness()));
 
   if (state->transformer_ == nullptr || !state->transformer_->is_transition()) {
     // no transformer active or non-transition one
-    this->get_pixels() = esp_color_from_light_color_values(val);
+    this->get_raw_pixels() = val.as_rgbw(state->get_color_correction(), false);
   } else {
     // transition transformer active, activate specialized transition for addressable effects
     // instead of using a unified transition for all LEDs, we use the current state each LED as the
@@ -65,7 +57,7 @@ void AddressableLight::update_state(LightState *state) {
     this->last_transition_progress_ = new_progress;
 
     auto end_values = state->transformer_->get_end_values();
-    Color target_color = esp_color_from_light_color_values(end_values);
+    Color target_color = end_values.as_rgbw(ESPColorCorrection(), false);
 
     // our transition will handle brightness, disable brightness in correction.
     this->corrected_values_->set_brightness(255);
