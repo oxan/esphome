@@ -16,7 +16,7 @@ class AdalightLightEffect : public light::AddressableLightEffect, public uart::U
  public:
   void start() override;
   void stop() override;
-  void apply(light::AddressableLight &it, const Color &current_color) override;
+  void apply(light::ESPRangeView &it, const Color &current_color) override;
 
  protected:
   enum Frame {
@@ -26,9 +26,9 @@ class AdalightLightEffect : public light::AddressableLightEffect, public uart::U
   };
 
   int get_frame_size_(int led_count) const;
-  void reset_frame_(light::AddressableLight &it);
-  void blank_all_leds_(light::AddressableLight &it);
-  Frame parse_frame_(light::AddressableLight &it);
+  void reset_frame_(light::ESPRangeView &it);
+  void blank_all_leds_(light::ESPRangeView &it);
+  Frame parse_frame_(light::ESPRangeView &it);
 
  protected:
   uint32_t last_ack_{0};

@@ -18,17 +18,17 @@ class WLEDLightEffect : public light::AddressableLightEffect {
  public:
   void start() override;
   void stop() override;
-  void apply(light::AddressableLight &it, const Color &current_color) override;
+  void apply(light::ESPRangeView &it, const Color &current_color) override;
   void set_port(uint16_t port) { this->port_ = port; }
 
  protected:
-  void blank_all_leds_(light::AddressableLight &it);
-  bool parse_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size);
-  bool parse_notifier_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size);
-  bool parse_warls_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size);
-  bool parse_drgb_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size);
-  bool parse_drgbw_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size);
-  bool parse_dnrgb_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size);
+  void blank_all_leds_(light::ESPRangeView &it);
+  bool parse_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size);
+  bool parse_notifier_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size);
+  bool parse_warls_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size);
+  bool parse_drgb_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size);
+  bool parse_drgbw_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size);
+  bool parse_dnrgb_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size);
 
  protected:
   uint16_t port_{0};

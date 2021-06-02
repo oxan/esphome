@@ -38,14 +38,14 @@ void WLEDLightEffect::stop() {
   }
 }
 
-void WLEDLightEffect::blank_all_leds_(light::AddressableLight &it) {
+void WLEDLightEffect::blank_all_leds_(light::ESPRangeView &it) {
   for (int led = it.size(); led-- > 0;) {
     it[led].set(COLOR_BLACK);
   }
-  it.schedule_show();
+  this->schedule_show_();
 }
 
-void WLEDLightEffect::apply(light::AddressableLight &it, const Color &current_color) {
+void WLEDLightEffect::apply(light::ESPRangeView &it, const Color &current_color) {
   // Init UDP lazily
   if (!udp_) {
     udp_.reset(new WiFiUDP());
@@ -77,7 +77,7 @@ void WLEDLightEffect::apply(light::AddressableLight &it, const Color &current_co
   }
 }
 
-bool WLEDLightEffect::parse_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size) {
+bool WLEDLightEffect::parse_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size) {
   // At minimum frame needs to have:
   // 1b - protocol
   // 1b - timeout
@@ -135,16 +135,16 @@ bool WLEDLightEffect::parse_frame_(light::AddressableLight &it, const uint8_t *p
     blank_at_ = millis() + DEFAULT_BLANK_TIME;
   }
 
-  it.schedule_show();
+  this->schedule_show_();
   return true;
 }
 
-bool WLEDLightEffect::parse_notifier_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size) {
+bool WLEDLightEffect::parse_notifier_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size) {
   // Packet needs to be empty
   return size == 0;
 }
 
-bool WLEDLightEffect::parse_warls_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size) {
+bool WLEDLightEffect::parse_warls_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size) {
   // packet: index, r, g, b
   if ((size % 4) != 0) {
     return false;
@@ -167,7 +167,7 @@ bool WLEDLightEffect::parse_warls_frame_(light::AddressableLight &it, const uint
   return true;
 }
 
-bool WLEDLightEffect::parse_drgb_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size) {
+bool WLEDLightEffect::parse_drgb_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size) {
   // packet: r, g, b
   if ((size % 3) != 0) {
     return false;
@@ -189,7 +189,7 @@ bool WLEDLightEffect::parse_drgb_frame_(light::AddressableLight &it, const uint8
   return true;
 }
 
-bool WLEDLightEffect::parse_drgbw_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size) {
+bool WLEDLightEffect::parse_drgbw_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size) {
   // packet: r, g, b, w
   if ((size % 4) != 0) {
     return false;
@@ -212,7 +212,7 @@ bool WLEDLightEffect::parse_drgbw_frame_(light::AddressableLight &it, const uint
   return true;
 }
 
-bool WLEDLightEffect::parse_dnrgb_frame_(light::AddressableLight &it, const uint8_t *payload, uint16_t size) {
+bool WLEDLightEffect::parse_dnrgb_frame_(light::ESPRangeView &it, const uint8_t *payload, uint16_t size) {
   // offset: high, low
   if (size < 2) {
     return false;

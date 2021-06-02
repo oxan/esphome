@@ -29,7 +29,7 @@ void AddressableLightDisplay::display() {
   for (uint32_t offset = 0; offset < this->addressable_light_buffer_.size(); offset++) {
     c = &(this->addressable_light_buffer_[offset]);
 
-    light::ESPColorView pixel = (*this->light_)[offset];
+    light::ESPColorView pixel = this->light_->get_pixels()[offset];
 
     // Track the original values for the pixel view. If it has changed updating, then
     // we trigger a redraw. Avoiding redraws == avoiding flicker!

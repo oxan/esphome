@@ -31,22 +31,25 @@ class AddressableLightEffect : public LightEffect {
  public:
   explicit AddressableLightEffect(const std::string &name) : LightEffect(name) {}
   void start_internal() override {
-    for(auto view : *this->get_addressable_())
+    for(auto view : this->get_pixels_())
       view.set_effect_data(0);
     this->start();
   }
-  virtual void apply(AddressableLight &it, const Color &current_color) = 0;
+  virtual void apply(ESPRangeView &it, const Color &current_color) = 0;
   void apply() override {
     LightColorValues color = this->state_->remote_values;
     // not using any color correction etc. that will be handled by the addressable layer
     Color current_color =
         Color(static_cast<uint8_t>(color.get_red() * 255), static_cast<uint8_t>(color.get_green() * 255),
               static_cast<uint8_t>(color.get_blue() * 255), static_cast<uint8_t>(color.get_white() * 255));
-    this->apply(*this->get_addressable_(), current_color);
+    ESPRangeView pixels = this->get_pixels_();
+    this->apply(pixels, current_color);
   }
 
  protected:
   AddressableLight *get_addressable_() const { return (AddressableLight *) this->state_->get_output(); }
+  ESPRangeView get_pixels_() const { return this->get_addressable_()->get_pixels(); }
+  void schedule_show_() const { this->get_addressable_()->schedule_show(); }
 };
 
 class AddressableLambdaLightEffect : public AddressableLightEffect {
@@ -56,13 +59,13 @@ class AddressableLambdaLightEffect : public AddressableLightEffect {
                                uint32_t update_interval)
       : AddressableLightEffect(name), f_(std::move(f)), update_interval_(update_interval) {}
   void start() override { this->initial_run_ = true; }
-  void apply(AddressableLight &it, const Color &current_color) override {
+  void apply(ESPRangeView &it, const Color &current_color) override {
     const uint32_t now = millis();
     if (now - this->last_run_ >= this->update_interval_) {
       this->last_run_ = now;
-      this->f_(it, current_color, this->initial_run_);
+      this->f_(*this->get_addressable_(), current_color, this->initial_run_);
       this->initial_run_ = false;
-      it.schedule_show();
+      this->schedule_show_();
     }
   }
 
@@ -76,7 +79,7 @@ class AddressableLambdaLightEffect : public AddressableLightEffect {
 class AddressableRainbowLightEffect : public AddressableLightEffect {
  public:
   explicit AddressableRainbowLightEffect(const std::string &name) : AddressableLightEffect(name) {}
-  void apply(AddressableLight &it, const Color &current_color) override {
+  void apply(ESPRangeView &it, const Color &current_color) override {
     ESPHSVColor hsv;
     hsv.value = 255;
     hsv.saturation = 240;
@@ -87,7 +90,7 @@ class AddressableRainbowLightEffect : public AddressableLightEffect {
       var = hsv;
       hue += add;
     }
-    it.schedule_show();
+    this->schedule_show_();
   }
   void set_speed(uint32_t speed) { this->speed_ = speed; }
   void set_width(uint16_t width) { this->width_ = width; }
@@ -109,7 +112,7 @@ class AddressableColorWipeEffect : public AddressableLightEffect {
   void set_colors(const std::vector<AddressableColorWipeEffectColor> &colors) { this->colors_ = colors; }
   void set_add_led_interval(uint32_t add_led_interval) { this->add_led_interval_ = add_led_interval; }
   void set_reverse(bool reverse) { this->reverse_ = reverse; }
-  void apply(AddressableLight &it, const Color &current_color) override {
+  void apply(ESPRangeView &it, const Color &current_color) override {
     const uint32_t now = millis();
     if (now - this->last_add_ < this->add_led_interval_)
       return;
@@ -135,7 +138,7 @@ class AddressableColorWipeEffect : public AddressableLightEffect {
         new_color.b = c.b;
       }
     }
-    it.schedule_show();
+    this->schedule_show_();
   }
 
  protected:
@@ -152,7 +155,7 @@ class AddressableScanEffect : public AddressableLightEffect {
   explicit AddressableScanEffect(const std::string &name) : AddressableLightEffect(name) {}
   void set_move_interval(uint32_t move_interval) { this->move_interval_ = move_interval; }
   void set_scan_width(uint32_t scan_width) { this->scan_width_ = scan_width; }
-  void apply(AddressableLight &it, const Color &current_color) override {
+  void apply(ESPRangeView &it, const Color &current_color) override {
     const uint32_t now = millis();
     if (now - this->last_move_ < this->move_interval_)
       return;
@@ -173,7 +176,7 @@ class AddressableScanEffect : public AddressableLightEffect {
       it[this->at_led_ + i] = current_color;
     }
 
-    it.schedule_show();
+    this->schedule_show_();
   }
 
  protected:
@@ -187,7 +190,7 @@ class AddressableScanEffect : public AddressableLightEffect {
 class AddressableTwinkleEffect : public AddressableLightEffect {
  public:
   explicit AddressableTwinkleEffect(const std::string &name) : AddressableLightEffect(name) {}
-  void apply(AddressableLight &addressable, const Color &current_color) override {
+  void apply(ESPRangeView &it, const Color &current_color) override {
     const uint32_t now = millis();
     uint8_t pos_add = 0;
     if (now - this->last_progress_ > this->progress_interval_) {
@@ -195,7 +198,7 @@ class AddressableTwinkleEffect : public AddressableLightEffect {
       pos_add = pos_add32;
       this->last_progress_ += pos_add32 * this->progress_interval_;
     }
-    for (auto view : addressable) {
+    for (auto view : it) {
       if (view.get_effect_data() != 0) {
         const uint8_t sine = half_sin8(view.get_effect_data());
         view = current_color * sine;
@@ -209,12 +212,12 @@ class AddressableTwinkleEffect : public AddressableLightEffect {
       }
     }
     while (random_float() < this->twinkle_probability_) {
-      const size_t pos = random_uint32() % addressable.size();
-      if (addressable[pos].get_effect_data() != 0)
+      const size_t pos = random_uint32() % it.size();
+      if (it[pos].get_effect_data() != 0)
         continue;
-      addressable[pos].set_effect_data(1);
+      it[pos].set_effect_data(1);
     }
-    addressable.schedule_show();
+    this->schedule_show_();
   }
   void set_twinkle_probability(float twinkle_probability) { this->twinkle_probability_ = twinkle_probability; }
   void set_progress_interval(uint32_t progress_interval) { this->progress_interval_ = progress_interval; }
@@ -228,7 +231,7 @@ class AddressableTwinkleEffect : public AddressableLightEffect {
 class AddressableRandomTwinkleEffect : public AddressableLightEffect {
  public:
   explicit AddressableRandomTwinkleEffect(const std::string &name) : AddressableLightEffect(name) {}
-  void apply(AddressableLight &it, const Color &current_color) override {
+  void apply(ESPRangeView &it, const Color &current_color) override {
     const uint32_t now = millis();
     uint8_t pos_add = 0;
     if (now - this->last_progress_ > this->progress_interval_) {
@@ -262,7 +265,7 @@ class AddressableRandomTwinkleEffect : public AddressableLightEffect {
       const uint8_t color = random_uint32() & 0b111;
       it[pos].set_effect_data(0b1000 | color);
     }
-    it.schedule_show();
+    this->schedule_show_();
   }
   void set_twinkle_probability(float twinkle_probability) { this->twinkle_probability_ = twinkle_probability; }
   void set_progress_interval(uint32_t progress_interval) { this->progress_interval_ = progress_interval; }
@@ -277,10 +280,9 @@ class AddressableFireworksEffect : public AddressableLightEffect {
  public:
   explicit AddressableFireworksEffect(const std::string &name) : AddressableLightEffect(name) {}
   void start() override {
-    auto &it = *this->get_addressable_();
-    it.all() = COLOR_BLACK;
+    this->get_pixels_() = COLOR_BLACK;
   }
-  void apply(AddressableLight &it, const Color &current_color) override {
+  void apply(ESPRangeView &it, const Color &current_color) override {
     const uint32_t now = millis();
     if (now - this->last_update_ < this->update_interval_)
       return;
@@ -307,7 +309,7 @@ class AddressableFireworksEffect : public AddressableLightEffect {
         it[pos] = current_color;
       }
     }
-    it.schedule_show();
+    this->schedule_show_();
   }
   void set_update_interval(uint32_t update_interval) { this->update_interval_ = update_interval; }
   void set_spark_probability(float spark_probability) { this->spark_probability_ = spark_probability; }
@@ -325,7 +327,7 @@ class AddressableFireworksEffect : public AddressableLightEffect {
 class AddressableFlickerEffect : public AddressableLightEffect {
  public:
   explicit AddressableFlickerEffect(const std::string &name) : AddressableLightEffect(name) {}
-  void apply(AddressableLight &it, const Color &current_color) override {
+  void apply(ESPRangeView &it, const Color &current_color) override {
     const uint32_t now = millis();
     const uint8_t intensity = this->intensity_;
     const uint8_t inv_intensity = 255 - intensity;
@@ -342,7 +344,7 @@ class AddressableFlickerEffect : public AddressableLightEffect {
       // slowly fade back to "real" value
       var = (var.get() * inv_intensity) + (current_color * intensity);
     }
-    it.schedule_show();
+    this->schedule_show_();
   }
   void set_update_interval(uint32_t update_interval) { this->update_interval_ = update_interval; }
   void set_intensity(float intensity) { this->intensity_ = static_cast<uint8_t>(roundf(intensity * 255.0f)); }

@@ -42,7 +42,7 @@ void AddressableLight::update_state(LightState *state) {
 
   if (state->transformer_ == nullptr || !state->transformer_->is_transition()) {
     // no transformer active or non-transition one
-    this->all() = esp_color_from_light_color_values(val);
+    this->get_pixels() = esp_color_from_light_color_values(val);
   } else {
     // transition transformer active, activate specialized transition for addressable effects
     // instead of using a unified transition for all LEDs, we use the current state each LED as the
@@ -89,7 +89,7 @@ void AddressableLight::update_state(LightState *state) {
       uint8_t inv_alpha8 = 255 - alpha8;
       Color add = target_color * alpha8;
 
-      for (auto led : *this)
+      for (auto led : this->get_pixels())
         led = add + led.get() * inv_alpha8;
     }
   }

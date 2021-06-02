@@ -21,7 +21,7 @@ int E131AddressableLightEffect::get_last_universe() const { return first_univers
 int E131AddressableLightEffect::get_universe_count() const {
   // Round up to lights_per_universe
   auto lights = get_lights_per_universe();
-  return (get_addressable_()->size() + lights - 1) / lights;
+  return (get_pixels_().size() + lights - 1) / lights;
 }
 
 void E131AddressableLightEffect::start() {
@@ -40,12 +40,12 @@ void E131AddressableLightEffect::stop() {
   AddressableLightEffect::stop();
 }
 
-void E131AddressableLightEffect::apply(light::AddressableLight &it, const Color &current_color) {
+void E131AddressableLightEffect::apply(light::ESPRangeView &it, const Color &current_color) {
   // ignore, it is run by `E131Component::update()`
 }
 
 bool E131AddressableLightEffect::process_(int universe, const E131Packet &packet) {
-  auto it = get_addressable_();
+  auto it = get_pixels_();
 
   // check if this is our universe and data are valid
   if (universe < first_universe_ || universe > get_last_universe())
@@ -54,7 +54,7 @@ bool E131AddressableLightEffect::process_(int universe, const E131Packet &packet
   int output_offset = (universe - first_universe_) * get_lights_per_universe();
   // limit amount of lights per universe and received
   int output_end =
-      std::min(it->size(), std::min(output_offset + get_lights_per_universe(), output_offset + packet.count - 1));
+      std::min(it.size(), std::min(output_offset + get_lights_per_universe(), output_offset + packet.count - 1));
   auto input_data = packet.values + 1;
 
   ESP_LOGV(TAG, "Applying data for '%s' on %d universe, for %d-%d.", get_name().c_str(), universe, output_offset,
@@ -63,14 +63,14 @@ bool E131AddressableLightEffect::process_(int universe, const E131Packet &packet
   switch (channels_) {
     case E131_MONO:
       for (; output_offset < output_end; output_offset++, input_data++) {
-        auto output = (*it)[output_offset];
+        auto output = it[output_offset];
         output.set(Color(input_data[0], input_data[0], input_data[0], input_data[0]));
       }
       break;
 
     case E131_RGB:
       for (; output_offset < output_end; output_offset++, input_data += 3) {
-        auto output = (*it)[output_offset];
+        auto output = it[output_offset];
         output.set(
             Color(input_data[0], input_data[1], input_data[2], (input_data[0] + input_data[1] + input_data[2]) / 3));
       }
@@ -78,13 +78,13 @@ bool E131AddressableLightEffect::process_(int universe, const E131Packet &packet
 
     case E131_RGBW:
       for (; output_offset < output_end; output_offset++, input_data += 4) {
-        auto output = (*it)[output_offset];
+        auto output = it[output_offset];
         output.set(Color(input_data[0], input_data[1], input_data[2], input_data[3]));
       }
       break;
   }
 
-  it->schedule_show();
+  this->schedule_show_();
   return true;
 }
 

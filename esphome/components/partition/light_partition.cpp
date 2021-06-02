@@ -31,7 +31,7 @@ light::ESPColorView PartitionedLightValues::find_pixel(int32_t index) const {
   else
     src_off = seg.get_src_offset() + seg_off;
 
-  return (*seg.get_src())[src_off];
+  return (*seg.get_src()).get_pixels()[src_off];
 }
 
 }  // namespace partition
