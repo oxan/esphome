@@ -200,8 +200,20 @@ LightColorValues LightCall::validate_() {
 
   // Color temperature exists check
   if (this->color_temperature_.has_value() && !traits.get_supports_color_temperature()) {
-    ESP_LOGW(TAG, "'%s' - This light does not support setting color temperature!", name);
-    this->color_temperature_.reset();
+    // If color temperature is not supported, but RGB is supported, and color is either unset or set to white,
+    // emulate a color temperature with RGB.
+    if (traits.get_supports_rgb() &&
+        ((!this->red_.has_value() && !this->green_.has_value() && !this->blue_.has_value()) ||
+         (this->red_.value() == 1.0f && this->blue_.value() == 1.0f && this->green_.value() == 1.0f))) {
+      ESP_LOGI(TAG, "'%s' - Emulating color temperature through usage of RGB color.", name);
+      auto emulated = Color::from_color_temperature(this->color_temperature_.value());
+      this->red_ = emulated.red / 255.0f;
+      this->green_ = emulated.green / 255.0f;
+      this->blue_ = emulated.blue / 255.0f;
+    } else {
+      ESP_LOGW(TAG, "'%s' - This light does not support setting color temperature!", name);
+      this->color_temperature_.reset();
+    }
   }
 
   // If white channel is specified, set RGB to white color (when interlock is enabled)

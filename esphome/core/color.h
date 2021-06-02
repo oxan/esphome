@@ -144,8 +144,12 @@ struct Color {
   Color fade_to_black(uint8_t amnt) { return *this * amnt; }
   Color lighten(uint8_t delta) { return *this + delta; }
   Color darken(uint8_t delta) { return *this - delta; }
+
+  static Color from_color_temperature(float color_temperature);
 };
 
 static const Color COLOR_BLACK(0, 0, 0);
 static const Color COLOR_WHITE(255, 255, 255, 255);
+
+
 };  // namespace esphome
