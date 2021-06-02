@@ -13,10 +13,17 @@
 namespace esphome {
 namespace light {
 
-using ESPColor ESPDEPRECATED("esphome::light::ESPColor is deprecated, use esphome::Color instead.", "v1.21") = Color;
-
 class AddressableLight : public LightOutput, public Component {
  public:
+  void call_setup() override;
+  void setup_state(LightState *state) override;
+  void update_state(LightState *state) override;
+
+  void set_correction(float red, float green, float blue, float white = 1.0f) {
+    this->correction_.set_max_brightness(
+        Color(to_uint8_scale(red), to_uint8_scale(green), to_uint8_scale(blue), to_uint8_scale(white)));
+  }
+
   ESPRangeView pixels() {
     return ESPRangeView{*this->buffer_, this->correction_, this->brightness_, 0, (int32_t) this->buffer_->size()};
   }
@@ -24,23 +31,12 @@ class AddressableLight : public LightOutput, public Component {
     return ESPRangeView{*this->buffer_, this->correction_, 255, 0, (int32_t) this->buffer_->size()};
   }
 
+  void schedule_show() { this->state_parent_->next_write_ = true; }
+
   // Indicates whether an effect that directly updates the output buffer is active to prevent overwriting
   bool is_effect_active() const { return this->effect_active_; }
   void set_effect_active(bool effect_active) { this->effect_active_ = effect_active; }
   std::unique_ptr<LightTransformer> create_default_transition() override;
-
-  void set_correction(float red, float green, float blue, float white = 1.0f) {
-    this->correction_.set_max_brightness(
-        Color(to_uint8_scale(red), to_uint8_scale(green), to_uint8_scale(blue), to_uint8_scale(white)));
-  }
-  void setup_state(LightState *state) override {
-    this->correction_.set_gamma_correction(state->get_gamma_correct());
-    this->state_parent_ = state;
-  }
-  void update_state(LightState *state) override;
-  void schedule_show() { this->state_parent_->next_write_ = true; }
-
-  void call_setup() override;
 
   // Legacy methods
   ESPDEPRECATED("AddressableLight.size() is deprecated, use pixels().size() instead", "2021.9")
@@ -62,15 +58,13 @@ class AddressableLight : public LightOutput, public Component {
   void shift_right(int32_t amnt) { return this->pixels().shift_right(amnt); }
 
  protected:
-  friend class AddressableLightTransformer;
-
   virtual std::shared_ptr<AddressableLightBuffer> create_buffer() = 0;
 
+  LightState *state_parent_{nullptr};
+  ESPColorCorrection correction_{};
   std::shared_ptr<AddressableLightBuffer> buffer_{nullptr};
   uint8_t brightness_{};
   bool effect_active_{false};
-  ESPColorCorrection correction_{};
-  LightState *state_parent_{nullptr};
 };
 
 class AddressableLightTransformer : public LightTransitionTransformer {
@@ -87,6 +81,9 @@ class AddressableLightTransformer : public LightTransitionTransformer {
   float last_transition_progress_{0.0f};
   float accumulated_alpha_{0.0f};
 };
+
+// Legacy types
+using ESPColor ESPDEPRECATED("esphome::light::ESPColor is deprecated, use esphome::Color instead.", "v1.21") = Color;
 
 }  // namespace light
 }  // namespace esphome

@@ -35,6 +35,11 @@ Color esp_color_from_light_color_values(LightColorValues val) {
   return Color(r, g, b, w);
 }
 
+void AddressableLight::setup_state(LightState *state) {
+  this->correction_.set_gamma_correction(state->get_gamma_correct());
+  this->state_parent_ = state;
+}
+
 void AddressableLight::update_state(LightState *state) {
   const LightColorValues &val = this->state_parent_->current_values;
   this->brightness_ = val.is_on() ? to_uint8_scale(val.get_brightness()) : 0;
