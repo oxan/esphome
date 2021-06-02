@@ -5,7 +5,6 @@
 #include "esphome/core/color.h"
 #include "addressable_light_buffer.h"
 #include "esp_color_correction.h"
-#include "esp_color_view.h"
 #include "esp_range_view.h"
 #include "light_output.h"
 #include "light_state.h"
@@ -44,9 +43,9 @@ class AddressableLight : public LightOutput, public Component {
   ESPDEPRECATED("AddressableLight.size() is deprecated, use pixels().size() instead", "2021.9")
   virtual int32_t size() const { return this->buffer_->size(); }
   ESPDEPRECATED("AddressableLight[] is deprecated, use pixels()[] instead", "2021.9")
-  ESPColorView operator[](int32_t index) { return this->pixels()[index]; }
+  ESPRangeView operator[](int32_t index) { return this->pixels()[index]; }
   ESPDEPRECATED("AddressableLight.get() is deprecated, use pixels().get() instead", "2021.9")
-  ESPColorView get(int32_t index) { return this->pixels()[index]; }
+  ESPRangeView get(int32_t index) { return this->pixels()[index]; }
   ESPDEPRECATED("AddressableLight.range() is deprecated, use pixels().range() instead", "2021.9")
   ESPRangeView range(int32_t from, int32_t to) { return this->pixels().range(from, to); }
   ESPDEPRECATED("AddressableLight.all() is deprecated, use pixels() instead", "2021.9")

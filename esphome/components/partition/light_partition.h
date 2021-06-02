@@ -51,7 +51,7 @@ class PartitionLightBuffer : public light::AddressableLightBuffer {
   }
 
  protected:
-  light::ESPColorView find_pixel_(int32_t index) const;
+  light::ESPRangeView find_pixel_(int32_t index) const;
 
   const uint32_t size_;
   const std::vector<AddressableSegment> &segments_;

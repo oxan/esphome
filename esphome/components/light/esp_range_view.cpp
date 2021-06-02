@@ -1,8 +1,11 @@
+#include "esphome/core/log.h"
 #include "esp_range_view.h"
 #include "addressable_light.h"
 
 namespace esphome {
 namespace light {
+
+static const char *const TAG = "light.addressable";
 
 int32_t HOT interpret_index(int32_t index, int32_t size) {
   if (index < 0)
@@ -10,9 +13,9 @@ int32_t HOT interpret_index(int32_t index, int32_t size) {
   return index;
 }
 
-ESPColorView ESPRangeView::operator[](int32_t index) const {
-  index = interpret_index(index, this->size()) + this->begin_;
-  return {this->parent_, index, &this->correction_};
+ESPRangeView ESPRangeView::operator[](int32_t index) const {
+  index = this->begin_ + interpret_index(index, this->size());
+  return {this->parent_, this->correction_, index, index + 1};
 }
 ESPRangeIterator ESPRangeView::begin() { return {*this, this->begin_}; }
 ESPRangeIterator ESPRangeView::end() { return {*this, this->end_}; }
@@ -90,9 +93,11 @@ void ESPRangeView::shift_right(int32_t amnt) {
 }
 
 ESPRangeView &ESPRangeView::operator=(const ESPRangeView &rhs) {  // NOLINT
-  // If size doesn't match, error (todo warning)
-  if (rhs.size() != this->size())
+  // If size doesn't match, error
+  if (rhs.size() != this->size()) {
+    ESP_LOGE(TAG, "Range assignment of unequal length is not possible.");
     return *this;
+  }
 
   if (&this->parent_ != &rhs.parent_) {
     for (int32_t i = 0; i < this->size(); i++)
