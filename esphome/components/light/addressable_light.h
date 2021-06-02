@@ -19,10 +19,10 @@ class AddressableLight : public LightOutput, public Component {
  public:
   virtual int32_t size() const = 0;
   ESPColorView operator[](int32_t index) {
-    return ESPColorView{this->get_light_values(), interpret_index(index, this->size()), &this->correction_};
+    return ESPColorView{*this->corrected_values_, interpret_index(index, this->size())};
   }
   ESPColorView get(int32_t index) {
-    return ESPColorView{this->get_light_values(), interpret_index(index, this->size()), &this->correction_};
+    return ESPColorView{*this->corrected_values_, interpret_index(index, this->size())};
   }
   ESPRangeView range(int32_t from, int32_t to) {
     from = interpret_index(from, this->size());
@@ -56,6 +56,7 @@ class AddressableLight : public LightOutput, public Component {
   }
   void setup_state(LightState *state) override {
     this->correction_.calculate_gamma_table(state->get_gamma_correct());
+    this->corrected_values_ = new ColorCorrectingLightValues(this->get_light_values(), this->correction_);
     this->state_parent_ = state;
   }
   void update_state(LightState *state) override;
@@ -67,6 +68,7 @@ class AddressableLight : public LightOutput, public Component {
   virtual AddressableLightValues& get_light_values() = 0;
 
   ESPColorCorrection correction_{};
+  ColorCorrectingLightValues *corrected_values_{nullptr};
   LightState *state_parent_{nullptr};
   float last_transition_progress_{0.0f};
   float accumulated_alpha_{0.0f};

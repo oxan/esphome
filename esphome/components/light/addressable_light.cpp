@@ -14,9 +14,8 @@ void AddressableLight::call_setup() {
     const char *name = this->state_parent_ == nullptr ? "" : this->state_parent_->get_name().c_str();
     ESP_LOGVV(TAG, "Addressable Light '%s'", name);
     for (int i = 0; i < this->size(); i++) {
-      auto color = this->get(i);
-      ESP_LOGVV(TAG, "  [%2d] Color: R=%3u G=%3u B=%3u W=%3u", i, color.get_red_raw(), color.get_green_raw(),
-                color.get_blue_raw(), color.get_white_raw());
+      auto color = this->get_light_values().get(i);
+      ESP_LOGVV(TAG, "  [%2d] Color: R=%3u G=%3u B=%3u W=%3u", i, color.red, color.green, color.blue, color.white);
     }
     ESP_LOGVV(TAG, "");
   });
