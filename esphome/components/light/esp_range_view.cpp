@@ -15,33 +15,33 @@ int32_t HOT interpret_index(int32_t index, int32_t size) {
 
 ESPRangeView ESPRangeView::operator[](int32_t index) const {
   index = this->begin_ + interpret_index(index, this->size());
-  return {this->parent_, this->correction_, index, index + 1};
+  return {this->parent_, this->correction_, this->brightness_, index, index + 1};
 }
 ESPRangeIterator ESPRangeView::begin() { return {*this, this->begin_}; }
 ESPRangeIterator ESPRangeView::end() { return {*this, this->end_}; }
 
 void ESPRangeView::set(const Color &color) {
-  auto corrected = this->correction_.correct(color);
+  auto corrected = this->correction_.correct(color, this->brightness_);
   for (int32_t i = this->begin_; i < this->end_; i++)
     this->parent_.set(i, corrected);
 }
 void ESPRangeView::set_red(uint8_t red) {
-  auto corrected = this->correction_.correct_red(red);
+  auto corrected = this->correction_.correct_red(red, this->brightness_);
   for (int32_t i = this->begin_; i < this->end_; i++)
     this->parent_.set_red(i, corrected);
 }
 void ESPRangeView::set_green(uint8_t green) {
-  auto corrected = this->correction_.correct_green(green);
+  auto corrected = this->correction_.correct_green(green, this->brightness_);
   for (int32_t i = this->begin_; i < this->end_; i++)
     this->parent_.set_green(i, corrected);
 }
 void ESPRangeView::set_blue(uint8_t blue) {
-  auto corrected = this->correction_.correct_blue(blue);
+  auto corrected = this->correction_.correct_blue(blue, this->brightness_);
   for (int32_t i = this->begin_; i < this->end_; i++)
     this->parent_.set_blue(i, corrected);
 }
 void ESPRangeView::set_white(uint8_t white) {
-  auto corrected = this->correction_.correct_white(white);
+  auto corrected = this->correction_.correct_white(white, this->brightness_);
   for (int32_t i = this->begin_; i < this->end_; i++)
     this->parent_.set_white(i, corrected);
 }
@@ -70,7 +70,7 @@ void ESPRangeView::darken(uint8_t delta) {
 ESPRangeView ESPRangeView::range(int32_t from, int32_t to) const {
   from = interpret_index(from, this->size());
   to = interpret_index(to, this->size());
-  return {this->parent_, this->correction_, this->begin_ + from, this->begin_ + to};
+  return {this->parent_, this->correction_, this->brightness_, this->begin_ + from, this->begin_ + to};
 }
 
 void ESPRangeView::shift_left(int32_t amnt) {

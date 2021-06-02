@@ -36,15 +36,14 @@ Color esp_color_from_light_color_values(LightColorValues val) {
 }
 
 void AddressableLight::update_state(LightState *state) {
-  auto val = state->current_values;
-  auto max_brightness = to_uint8_scale(val.get_brightness() * val.get_state());
-  this->correction_.set_local_brightness(max_brightness);
+  const LightColorValues &val = this->state_parent_->current_values;
+  this->brightness_ = val.is_on() ? to_uint8_scale(val.get_brightness()) : 0;
 
   if (this->is_effect_active())
     return;
 
-  // don't use LightState helper, gamma correction+brightness is handled by ESPColorView
-  this->pixels() = esp_color_from_light_color_values(val);
+  // don't use LightState helper, gamma correction+brightness is handled by ESPRangeView
+  this->pixels() = esp_color_from_light_color_values(state->current_values);
   this->schedule_show();
 }
 
@@ -55,9 +54,6 @@ void AddressableLightTransformer::start() {
 
   auto end_values = this->target_values_;
   this->target_color_ = esp_color_from_light_color_values(end_values);
-
-  // our transition will handle brightness, disable brightness in correction.
-  this->light_.correction_.set_local_brightness(255);
   this->target_color_ *= to_uint8_scale(end_values.get_brightness() * end_values.get_state());
 }
 
@@ -98,7 +94,7 @@ optional<LightColorValues> AddressableLightTransformer::apply() {
     uint8_t inv_alpha8 = 255 - alpha8;
     Color add = this->target_color_ * alpha8;
 
-    for (auto led : this->light_.pixels())
+    for (auto led : this->pixels_view_)
       led.set(add + led.get() * inv_alpha8);
   }
 

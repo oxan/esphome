@@ -16,8 +16,16 @@ class ESPRangeIterator;
  */
 class ESPRangeView {
  public:
-  ESPRangeView(AddressableLightBuffer &parent, ESPColorCorrection &correction, int32_t begin, int32_t end)
-      : parent_(parent), correction_(correction), begin_(begin), end_(end < begin ? begin : end) {}
+  ESPRangeView(AddressableLightBuffer &parent, ESPColorCorrection &correction, uint8_t brightness, int32_t begin,
+               int32_t end)
+      : parent_(parent),
+        correction_(correction),
+        brightness_(brightness),
+        begin_(begin),
+        end_(end < begin ? begin : end) {}
+
+  void set_brightness(uint8_t brightness) { this->brightness_ = brightness; }
+  uint8_t get_brightness() { return this->brightness_; }
 
   int32_t size() const { return this->end_ - this->begin_; }
   ESPRangeView operator[](int32_t index) const;
@@ -66,6 +74,7 @@ class ESPRangeView {
 
   AddressableLightBuffer &parent_;
   ESPColorCorrection &correction_;
+  uint8_t brightness_;
   int32_t begin_;
   int32_t end_;
 };

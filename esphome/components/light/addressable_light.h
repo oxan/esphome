@@ -18,7 +18,10 @@ using ESPColor ESPDEPRECATED("esphome::light::ESPColor is deprecated, use esphom
 class AddressableLight : public LightOutput, public Component {
  public:
   ESPRangeView pixels() {
-    return ESPRangeView{*this->buffer_, this->correction_, 0, (int32_t) this->buffer_->size()};
+    return ESPRangeView{*this->buffer_, this->correction_, this->brightness_, 0, (int32_t) this->buffer_->size()};
+  }
+  ESPRangeView fullrange_pixels() {
+    return ESPRangeView{*this->buffer_, this->correction_, 255, 0, (int32_t) this->buffer_->size()};
   }
 
   // Indicates whether an effect that directly updates the output buffer is active to prevent overwriting
@@ -31,7 +34,7 @@ class AddressableLight : public LightOutput, public Component {
         Color(to_uint8_scale(red), to_uint8_scale(green), to_uint8_scale(blue), to_uint8_scale(white)));
   }
   void setup_state(LightState *state) override {
-    this->correction_.calculate_gamma_table(state->get_gamma_correct());
+    this->correction_.set_gamma_correction(state->get_gamma_correct());
     this->state_parent_ = state;
   }
   void update_state(LightState *state) override;
@@ -64,6 +67,7 @@ class AddressableLight : public LightOutput, public Component {
   virtual std::shared_ptr<AddressableLightBuffer> create_buffer() = 0;
 
   std::shared_ptr<AddressableLightBuffer> buffer_{nullptr};
+  uint8_t brightness_{};
   bool effect_active_{false};
   ESPColorCorrection correction_{};
   LightState *state_parent_{nullptr};
@@ -71,13 +75,14 @@ class AddressableLight : public LightOutput, public Component {
 
 class AddressableLightTransformer : public LightTransitionTransformer {
  public:
-  AddressableLightTransformer(AddressableLight &light) : light_(light) {}
+  AddressableLightTransformer(AddressableLight &light) : light_(light), pixels_view_(light.fullrange_pixels()) {}
 
   void start() override;
   optional<LightColorValues> apply() override;
 
  protected:
   AddressableLight &light_;
+  ESPRangeView pixels_view_;
   Color target_color_{};
   float last_transition_progress_{0.0f};
   float accumulated_alpha_{0.0f};
