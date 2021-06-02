@@ -33,21 +33,21 @@ int AdalightLightEffect::get_frame_size_(int led_count) const {
   return 3 + 2 + 1 + led_count * 3;
 }
 
-void AdalightLightEffect::reset_frame_(light::AddressableLight &it) {
+void AdalightLightEffect::reset_frame_(light::ESPRangeView &it) {
   int buffer_capacity = get_frame_size_(it.size());
 
   frame_.clear();
   frame_.reserve(buffer_capacity);
 }
 
-void AdalightLightEffect::blank_all_leds_(light::AddressableLight &it) {
+void AdalightLightEffect::blank_all_leds_(light::ESPRangeView &it) {
   for (int led = it.size(); led-- > 0;) {
     it[led].set(Color::BLACK);
   }
-  it.schedule_show();
+  this->schedule_show_();
 }
 
-void AdalightLightEffect::apply(light::AddressableLight &it, const Color &current_color) {
+void AdalightLightEffect::apply(light::ESPRangeView &it, const Color &current_color) {
   const uint32_t now = millis();
 
   if (now - this->last_ack_ >= ADALIGHT_ACK_INTERVAL) {
@@ -97,7 +97,7 @@ void AdalightLightEffect::apply(light::AddressableLight &it, const Color &curren
   }
 }
 
-AdalightLightEffect::Frame AdalightLightEffect::parse_frame_(light::AddressableLight &it) {
+AdalightLightEffect::Frame AdalightLightEffect::parse_frame_(light::ESPRangeView &it) {
   if (frame_.empty())
     return INVALID;
 
@@ -134,7 +134,7 @@ AdalightLightEffect::Frame AdalightLightEffect::parse_frame_(light::AddressableL
     it[led].set(Color(led_data[0], led_data[1], led_data[2], white));
   }
 
-  it.schedule_show();
+  this->schedule_show_();
   return CONSUMED;
 }
 

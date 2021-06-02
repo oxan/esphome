@@ -77,7 +77,7 @@ class PartitionLightOutput : public light::AddressableLight {
     else
       src_off = seg.get_src_offset() + seg_off;
 
-    auto view = (*seg.get_src())[src_off];
+    auto view = (*seg.get_src()).pixels()[src_off];
     view.raw_set_color_correction(&this->correction_);
     return view;
   }

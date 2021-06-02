@@ -14,7 +14,7 @@ void AddressableLight::call_setup() {
     const char *name = this->state_parent_ == nullptr ? "" : this->state_parent_->get_name().c_str();
     ESP_LOGVV(TAG, "Addressable Light '%s' (effect_active=%s)", name, YESNO(this->effect_active_));
     for (int i = 0; i < this->size(); i++) {
-      auto color = this->get(i);
+      auto color = this->pixels()[i];
       ESP_LOGVV(TAG, "  [%2d] Color: R=%3u G=%3u B=%3u W=%3u", i, color.get_red_raw(), color.get_green_raw(),
                 color.get_blue_raw(), color.get_white_raw());
     }
@@ -44,7 +44,7 @@ void AddressableLight::update_state(LightState *state) {
     return;
 
   // don't use LightState helper, gamma correction+brightness is handled by ESPColorView
-  this->all() = esp_color_from_light_color_values(val);
+  this->pixels() = esp_color_from_light_color_values(val);
   this->schedule_show();
 }
 
@@ -98,7 +98,7 @@ optional<LightColorValues> AddressableLightTransformer::apply() {
     uint8_t inv_alpha8 = 255 - alpha8;
     Color add = this->target_color_ * alpha8;
 
-    for (auto led : this->light_)
+    for (auto led : this->light_.pixels())
       led.set(add + led.get() * inv_alpha8);
   }
 
