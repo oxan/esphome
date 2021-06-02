@@ -48,6 +48,51 @@ enum class ESPNeoPixelOrder {
   RWBG = 0b00111001,
 };
 
+class NeoPixelBusLightBuffer : public light::AddressableLightBuffer {
+ public:
+  NeoPixelBusLightBuffer(uint32_t size, const uint8_t *rgb_offsets, ptrdiff_t pixel_size, uint8_t *pixels,
+                         uint8_t *effect_data)
+      : size_{size}, rgb_offsets_{rgb_offsets}, pixel_size_{pixel_size}, pixels_{pixels}, effect_data_{effect_data} {}
+  uint32_t size() const override { return this->size_; }
+  uint8_t get_red(int32_t index) const override {
+    return *(this->pixels_ + this->pixel_size_ * index + this->rgb_offsets_[0]);
+  }
+  uint8_t get_green(int32_t index) const override {
+    return *(this->pixels_ + this->pixel_size_ * index + this->rgb_offsets_[1]);
+  }
+  uint8_t get_blue(int32_t index) const override {
+    return *(this->pixels_ + this->pixel_size_ * index + this->rgb_offsets_[2]);
+  }
+  uint8_t get_effect_data(int32_t index) const override { return *(this->effect_data_ + index); }
+  void set_red(int32_t index, uint8_t red) override {
+    *(this->pixels_ + this->pixel_size_ * index + this->rgb_offsets_[0]) = red;
+  }
+  void set_green(int32_t index, uint8_t green) override {
+    *(this->pixels_ + this->pixel_size_ * index + this->rgb_offsets_[1]) = green;
+  }
+  void set_blue(int32_t index, uint8_t blue) override {
+    *(this->pixels_ + this->pixel_size_ * index + this->rgb_offsets_[2]) = blue;
+  }
+  void set_effect_data(int32_t index, uint8_t effect_data) override { *(this->effect_data_ + index) = effect_data; }
+
+  uint8_t get_white(int32_t index) const override {
+    if (this->pixel_size_ > 3)
+      return *(this->pixels_ + this->pixel_size_ * index + this->rgb_offsets_[3]);
+    return 0;
+  }
+  void set_white(int32_t index, uint8_t white) override {
+    if (this->pixel_size_ > 3)
+      *(this->pixels_ + this->pixel_size_ * index + this->rgb_offsets_[3]) = white;
+  }
+
+ protected:
+  const uint32_t size_;
+  const uint8_t *rgb_offsets_;
+  const ptrdiff_t pixel_size_;
+  uint8_t *pixels_;
+  uint8_t *effect_data_;
+};
+
 template<typename T_METHOD, typename T_COLOR_FEATURE>
 class NeoPixelBusLightOutputBase : public light::AddressableLight {
  public:
@@ -69,10 +114,7 @@ class NeoPixelBusLightOutputBase : public light::AddressableLight {
 
   // ========== INTERNAL METHODS ==========
   void setup() override {
-    for (int i = 0; i < this->size(); i++) {
-      (*this)[i] = Color(0, 0, 0, 0);
-    }
-
+    memset(this->controller_->Pixels(), this->controller_->PixelsSize(), 0);
     this->effect_data_ = new uint8_t[this->size()];
     this->controller_->Begin();
   }
@@ -111,10 +153,9 @@ class NeoPixelRGBLightOutput : public NeoPixelBusLightOutputBase<T_METHOD, T_COL
   }
 
  protected:
-  light::ESPColorView get_view_internal(int32_t index) const override {  // NOLINT
-    uint8_t *base = this->controller_->Pixels() + 3ULL * index;
-    return light::ESPColorView(base + this->rgb_offsets_[0], base + this->rgb_offsets_[1], base + this->rgb_offsets_[2],
-                               nullptr, this->effect_data_ + index, &this->correction_);
+  std::shared_ptr<light::AddressableLightBuffer> create_buffer() override {
+    return std::make_shared<NeoPixelBusLightBuffer>(this->rgb_offsets_, 3ULL, this->controller_->Pixels(),
+                                                    this->effect_data_);
   }
 };
 
@@ -128,10 +169,9 @@ class NeoPixelRGBWLightOutput : public NeoPixelBusLightOutputBase<T_METHOD, T_CO
   }
 
  protected:
-  light::ESPColorView get_view_internal(int32_t index) const override {  // NOLINT
-    uint8_t *base = this->controller_->Pixels() + 4ULL * index;
-    return light::ESPColorView(base + this->rgb_offsets_[0], base + this->rgb_offsets_[1], base + this->rgb_offsets_[2],
-                               base + this->rgb_offsets_[3], this->effect_data_ + index, &this->correction_);
+  std::shared_ptr<light::AddressableLightBuffer> create_buffer() override {
+    return std::make_shared<NeoPixelBusLightBuffer>(this->rgb_offsets_, 4ULL, this->controller_->Pixels(),
+                                                    this->effect_data_);
   }
 };
 

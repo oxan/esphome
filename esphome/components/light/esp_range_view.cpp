@@ -12,7 +12,7 @@ int32_t HOT interpret_index(int32_t index, int32_t size) {
 
 ESPColorView ESPRangeView::operator[](int32_t index) const {
   index = interpret_index(index, this->size()) + this->begin_;
-  return this->parent_->get_view_internal(index);
+  return {*this->parent_->buffer_, index, &this->parent_->correction_};
 }
 ESPRangeIterator ESPRangeView::begin() { return {*this, this->begin_}; }
 ESPRangeIterator ESPRangeView::end() { return {*this, this->end_}; }

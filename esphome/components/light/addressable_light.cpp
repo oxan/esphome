@@ -8,15 +8,15 @@ static const char *const TAG = "light.addressable";
 
 void AddressableLight::call_setup() {
   this->setup();
+  this->buffer_ = this->create_buffer();
 
 #ifdef ESPHOME_LOG_HAS_VERY_VERBOSE
   this->set_interval(5000, [this]() {
     const char *name = this->state_parent_ == nullptr ? "" : this->state_parent_->get_name().c_str();
     ESP_LOGVV(TAG, "Addressable Light '%s' (effect_active=%s)", name, YESNO(this->effect_active_));
-    for (int i = 0; i < this->size(); i++) {
-      auto color = this->pixels()[i];
-      ESP_LOGVV(TAG, "  [%2d] Color: R=%3u G=%3u B=%3u W=%3u", i, color.get_red_raw(), color.get_green_raw(),
-                color.get_blue_raw(), color.get_white_raw());
+    for (int i = 0; i < this->buffer_->size(); i++) {
+      ESP_LOGVV(TAG, "  [%2d] Color: R=%3u G=%3u B=%3u W=%3u", i, this->buffer_->get_red(i),
+                this->buffer_->get_green(i), this->buffer_->get_blue(i), this->buffer_->get_white(i));
     }
     ESP_LOGVV(TAG, " ");
   });

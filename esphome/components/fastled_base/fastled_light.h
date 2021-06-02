@@ -16,6 +16,37 @@
 namespace esphome {
 namespace fastled_base {
 
+class FastLEDLightBuffer : public light::AddressableLightBuffer {
+ public:
+  FastLEDLightBuffer(CRGB *leds, uint8_t *effect_data, uint32_t size)
+      : leds_{leds}, effect_data_{effect_data}, size_{size} {}
+
+  uint32_t size() const override { return this->size_; }
+
+  uint8_t get_red(int32_t index) const override { return leds_[index].r; }
+  uint8_t get_green(int32_t index) const override { return leds_[index].g; }
+  uint8_t get_blue(int32_t index) const override { return leds_[index].b; }
+  uint8_t get_white(int32_t index) const override { return 0; }
+  uint8_t get_effect_data(int32_t index) const override { return effect_data_[index]; }
+  Color get(int32_t index) const override { return Color(leds_[index].r, leds_[index].g, leds_[index].b, 0); }
+
+  void set_red(int32_t index, uint8_t red) override { leds_[index].r = red; }
+  void set_green(int32_t index, uint8_t green) override { leds_[index].g = green; }
+  void set_blue(int32_t index, uint8_t blue) override { leds_[index].b = blue; }
+  void set_white(int32_t index, uint8_t white) override {}
+  void set_effect_data(int32_t index, uint8_t effect_data) override { effect_data_[index] = effect_data; }
+  void set(int32_t index, const Color &color) override {
+    leds_[index].red = color.red;
+    leds_[index].green = color.green;
+    leds_[index].blue = color.blue;
+  }
+
+ protected:
+  CRGB *leds_{nullptr};
+  uint8_t *effect_data_{nullptr};
+  const uint32_t size_{0};
+};
+
 class FastLEDLightOutput : public light::AddressableLight {
  public:
   /// Only for custom effects: Get the internal controller.
@@ -217,9 +248,8 @@ class FastLEDLightOutput : public light::AddressableLight {
   float get_setup_priority() const override { return setup_priority::HARDWARE; }
 
  protected:
-  light::ESPColorView get_view_internal(int32_t index) const override {
-    return {&this->leds_[index].r,      &this->leds_[index].g, &this->leds_[index].b, nullptr,
-            &this->effect_data_[index], &this->correction_};
+  std::shared_ptr<light::AddressableLightBuffer> create_buffer() override {
+    return std::make_shared<FastLEDLightBuffer>(this->leds_, this->effect_data_, this->num_leds_);
   }
 
   CLEDController *controller_{nullptr};
