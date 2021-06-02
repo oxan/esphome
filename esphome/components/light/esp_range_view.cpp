@@ -60,6 +60,26 @@ void ESPRangeView::darken(uint8_t delta) {
   for (auto c : *this)
     c.darken(delta);
 }
+
+void ESPRangeView::shift_left(int32_t amnt) {
+  if (amnt < 0) {
+    this->shift_right(-amnt);
+    return;
+  }
+  if (amnt > this->size())
+    amnt = this->size();
+  this->range(0, -amnt) = this->range(amnt, this->size());
+}
+void ESPRangeView::shift_right(int32_t amnt) {
+  if (amnt < 0) {
+    this->shift_left(-amnt);
+    return;
+  }
+  if (amnt > this->size())
+    amnt = this->size();
+  this->range(amnt, this->size()) = this->range(0, -amnt);
+}
+
 ESPRangeView &ESPRangeView::operator=(const ESPRangeView &rhs) {  // NOLINT
   // If size doesn't match, error (todo warning)
   if (rhs.size() != this->size())

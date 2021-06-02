@@ -28,24 +28,7 @@ class AddressableLight : public LightOutput, public Component {
   ESPRangeView all() { return ESPRangeView(this, 0, this->size()); }
   ESPRangeIterator begin() { return this->all().begin(); }
   ESPRangeIterator end() { return this->all().end(); }
-  void shift_left(int32_t amnt) {
-    if (amnt < 0) {
-      this->shift_right(-amnt);
-      return;
-    }
-    if (amnt > this->size())
-      amnt = this->size();
-    this->range(0, -amnt) = this->range(amnt, this->size());
-  }
-  void shift_right(int32_t amnt) {
-    if (amnt < 0) {
-      this->shift_left(-amnt);
-      return;
-    }
-    if (amnt > this->size())
-      amnt = this->size();
-    this->range(amnt, this->size()) = this->range(0, -amnt);
-  }
+
   // Indicates whether an effect that directly updates the output buffer is active to prevent overwriting
   bool is_effect_active() const { return this->effect_active_; }
   void set_effect_active(bool effect_active) { this->effect_active_ = effect_active; }
@@ -62,6 +45,14 @@ class AddressableLight : public LightOutput, public Component {
   void schedule_show() { this->state_parent_->next_write_ = true; }
 
   void call_setup() override;
+
+  // Legacy methods
+  ESPDEPRECATED("AddressableLight.shift_left() is deprecated, use AddressableLight.all().shift_left() instead.",
+                "2021.9")
+  void shift_left(int32_t amnt) { return this->all().shift_left(amnt); }
+  ESPDEPRECATED("AddressableLight.shift_right() is deprecated, use AddressableLight.all().shift_right() instead.",
+                "2021.9")
+  void shift_right(int32_t amnt) { return this->all().shift_right(amnt); }
 
  protected:
   friend class AddressableLightTransformer;
