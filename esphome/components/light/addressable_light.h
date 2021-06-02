@@ -18,7 +18,9 @@ using ESPColor ESPDEPRECATED("esphome::light::ESPColor is deprecated, use esphom
 
 class AddressableLight : public LightOutput, public Component {
  public:
-  ESPRangeView pixels() { return ESPRangeView{this, 0, (int32_t) this->buffer_->size()}; }
+  ESPRangeView pixels() {
+    return ESPRangeView{*this->buffer_, this->correction_, 0, (int32_t) this->buffer_->size()};
+  }
 
   // Indicates whether an effect that directly updates the output buffer is active to prevent overwriting
   bool is_effect_active() const { return this->effect_active_; }
@@ -59,7 +61,6 @@ class AddressableLight : public LightOutput, public Component {
 
  protected:
   friend class AddressableLightTransformer;
-  friend class ESPRangeView;
 
   virtual std::shared_ptr<AddressableLightBuffer> create_buffer() = 0;
 

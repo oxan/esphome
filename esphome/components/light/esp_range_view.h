@@ -1,5 +1,7 @@
 #pragma once
 
+#include "addressable_light_buffer.h"
+#include "esp_color_correction.h"
 #include "esp_color_view.h"
 #include "esp_hsv_color.h"
 
@@ -8,7 +10,6 @@ namespace light {
 
 int32_t interpret_index(int32_t index, int32_t size);
 
-class AddressableLight;
 class ESPRangeIterator;
 
 /**
@@ -16,8 +17,8 @@ class ESPRangeIterator;
  */
 class ESPRangeView : public ESPColorSettable {
  public:
-  ESPRangeView(AddressableLight *parent, int32_t begin, int32_t end)
-      : parent_(parent), begin_(begin), end_(end < begin ? begin : end) {}
+  ESPRangeView(AddressableLightBuffer &parent, ESPColorCorrection &correction, int32_t begin, int32_t end)
+      : parent_(parent), correction_(correction), begin_(begin), end_(end < begin ? begin : end) {}
 
   int32_t size() const { return this->end_ - this->begin_; }
   ESPColorView operator[](int32_t index) const;
@@ -60,7 +61,8 @@ class ESPRangeView : public ESPColorSettable {
  protected:
   friend ESPRangeIterator;
 
-  AddressableLight *parent_;
+  AddressableLightBuffer &parent_;
+  ESPColorCorrection &correction_;
   int32_t begin_;
   int32_t end_;
 };
@@ -73,10 +75,10 @@ class ESPRangeIterator {
     return *this;
   }
   bool operator!=(const ESPRangeIterator &other) const { return this->i_ != other.i_; }
-  ESPColorView operator*() const;
+  ESPColorView operator*() const { return this->range_[this->i_]; }
 
  protected:
-  ESPRangeView range_;
+  const ESPRangeView &range_;
   int32_t i_;
 };
 
