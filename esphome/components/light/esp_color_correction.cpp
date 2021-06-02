@@ -4,7 +4,9 @@
 namespace esphome {
 namespace light {
 
-void ESPColorCorrection::calculate_gamma_table(float gamma) {
+void ESPColorCorrection::set_gamma_correction(float gamma) {
+  this->gamma_correction_ = gamma;
+
   for (uint16_t i = 0; i < 256; i++) {
     // corrected = val ^ gamma
     auto corrected = static_cast<uint8_t>(roundf(255.0f * gamma_correct(i / 255.0f, gamma)));

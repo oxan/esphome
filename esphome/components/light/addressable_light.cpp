@@ -31,15 +31,15 @@ Color esp_color_from_light_color_values(LightColorValues val) {
 }
 
 void AddressableLight::setup_state(LightState *state) {
-  this->correction_.calculate_gamma_table(state->get_gamma_correct());
-  this->corrected_values_ = new ColorCorrectingLightValues(this->get_light_values(), this->correction_);
+  this->correction_.set_gamma_correction(state->get_gamma_correct());
+  this->corrected_values_ = new ColorCorrectingLightValues(this->get_light_values(), this->correction_, 255);
   this->state_parent_ = state;
 }
 
 void AddressableLight::update_state(LightState *state) {
   auto val = state->current_values;
   auto max_brightness = static_cast<uint8_t>(roundf(val.get_brightness() * val.get_state() * 255.0f));
-  this->correction_.set_local_brightness(max_brightness);
+  this->corrected_values_->set_brightness(max_brightness);
 
   this->last_transition_progress_ = 0.0f;
   this->accumulated_alpha_ = 0.0f;
@@ -68,7 +68,7 @@ void AddressableLight::update_state(LightState *state) {
     Color target_color = esp_color_from_light_color_values(end_values);
 
     // our transition will handle brightness, disable brightness in correction.
-    this->correction_.set_local_brightness(255);
+    this->corrected_values_->set_brightness(255);
     uint8_t orig_w = target_color.w;
     target_color *= static_cast<uint8_t>(roundf(end_values.get_brightness() * end_values.get_state() * 255.0f));
     // w is not scaled by brightness

@@ -32,35 +32,37 @@ class AddressableLightValues {
 
 class ColorCorrectingLightValues : public AddressableLightValues {
  public:
-  ColorCorrectingLightValues(AddressableLightValues& parent, const ESPColorCorrection& correction)
-      : parent_(parent), correction_(correction) {}
+  ColorCorrectingLightValues(AddressableLightValues& parent, const ESPColorCorrection& correction, uint8_t brightness)
+      : parent_(parent), correction_(correction), brightness_(brightness) {}
+
+  void set_brightness(uint8_t brightness) { this->brightness_ = brightness; }
 
   uint8_t get_red(int32_t index) const override {
-    return this->correction_.uncorrect_red(this->parent_.get_red(index));
+    return this->correction_.uncorrect_red(this->parent_.get_red(index), brightness_);
   }
   uint8_t get_green(int32_t index) const override {
-    return this->correction_.uncorrect_green(this->parent_.get_green(index));
+    return this->correction_.uncorrect_green(this->parent_.get_green(index), brightness_);
   }
   uint8_t get_blue(int32_t index) const override {
-    return this->correction_.uncorrect_blue(this->parent_.get_blue(index));
+    return this->correction_.uncorrect_blue(this->parent_.get_blue(index), brightness_);
   }
   uint8_t get_white(int32_t index) const override {
-    return this->correction_.uncorrect_white(this->parent_.get_white(index));
+    return this->correction_.uncorrect_white(this->parent_.get_white(index), brightness_);
   }
   uint8_t get_effect_data(int32_t index) const override {
     return this->parent_.get_effect_data(index);
   }
   void set_red(int32_t index, uint8_t red) override {
-    this->parent_.set_red(index, this->correction_.correct_red(red));
+    this->parent_.set_red(index, this->correction_.correct_red(red, brightness_));
   }
   void set_green(int32_t index, uint8_t green) override {
-    this->parent_.set_green(index, this->correction_.correct_green(green));
+    this->parent_.set_green(index, this->correction_.correct_green(green, brightness_));
   }
   void set_blue(int32_t index, uint8_t blue) override {
-    this->parent_.set_blue(index, this->correction_.correct_blue(blue));
+    this->parent_.set_blue(index, this->correction_.correct_blue(blue, brightness_));
   }
   void set_white(int32_t index, uint8_t white) override {
-    this->parent_.set_white(index, this->correction_.correct_white(white));
+    this->parent_.set_white(index, this->correction_.correct_white(white, brightness_));
   }
   void set_effect_data(int32_t index, uint8_t effect_data) override {
     this->parent_.set_effect_data(index, effect_data);
@@ -69,6 +71,7 @@ class ColorCorrectingLightValues : public AddressableLightValues {
  protected:
   AddressableLightValues& parent_;
   const ESPColorCorrection& correction_;
+  uint8_t brightness_;
 };
 
 }  // namespace light
