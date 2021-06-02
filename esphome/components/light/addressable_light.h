@@ -18,38 +18,6 @@ using ESPColor ESPDEPRECATED("ESPColor is deprecated, use Color instead.") = Col
 class AddressableLight : public LightOutput, public Component {
  public:
   virtual int32_t size() const = 0;
-  ESPColorView operator[](int32_t index) {
-    return ESPColorView{*this->corrected_values_, interpret_index(index, this->size())};
-  }
-  ESPColorView get(int32_t index) {
-    return ESPColorView{*this->corrected_values_, interpret_index(index, this->size())};
-  }
-  ESPRangeView range(int32_t from, int32_t to) {
-    from = interpret_index(from, this->size());
-    to = interpret_index(to, this->size());
-    return ESPRangeView(this->get_light_values(), from, to);
-  }
-  ESPRangeView all() { return ESPRangeView(this->get_light_values(), 0, this->size()); }
-  ESPRangeIterator begin() { return this->all().begin(); }
-  ESPRangeIterator end() { return this->all().end(); }
-  void shift_left(int32_t amnt) {
-    if (amnt < 0) {
-      this->shift_right(-amnt);
-      return;
-    }
-    if (amnt > this->size())
-      amnt = this->size();
-    this->range(0, -amnt) = this->range(amnt, this->size());
-  }
-  void shift_right(int32_t amnt) {
-    if (amnt < 0) {
-      this->shift_left(-amnt);
-      return;
-    }
-    if (amnt > this->size())
-      amnt = this->size();
-    this->range(amnt, this->size()) = this->range(0, -amnt);
-  }
   void set_correction(float red, float green, float blue, float white = 1.0f) {
     this->correction_.set_max_brightness(Color(uint8_t(roundf(red * 255.0f)), uint8_t(roundf(green * 255.0f)),
                                                uint8_t(roundf(blue * 255.0f)), uint8_t(roundf(white * 255.0f))));
@@ -63,6 +31,26 @@ class AddressableLight : public LightOutput, public Component {
   void schedule_show() { this->state_parent_->next_write_ = true; }
 
   void call_setup() override;
+
+  ESPRangeView get_raw_pixels() { return ESPRangeView{this->get_light_values(), 0, this->size()}; }
+  ESPRangeView get_pixels() { return ESPRangeView{*this->corrected_values_, 0, this->size()}; }
+
+  // Compatibility methods
+  ESPDEPRECATED("AddressableLight[] is deprecated, use AddressableLight.get_pixels()[] instead.")
+  ESPColorView operator[](int32_t index) { return this->get_pixels()[index]; }
+  ESPDEPRECATED("AddressableLight.get() is deprecated, use AddressableLight.get_pixels().get() instead.")
+  ESPColorView get(int32_t index) { return this->get_pixels()[index]; }
+  ESPDEPRECATED("AddressableLight.range() is deprecated, use AddressableLight.get_pixels().range() instead.")
+  ESPRangeView range(int32_t from, int32_t to) { return this->get_pixels().range(from, to); }
+  ESPDEPRECATED("AddressableLight.all() is deprecated, use AddressableLight.get_pixels() instead.")
+  ESPRangeView all() { return this->get_pixels(); }
+  ESPDEPRECATED("Iteration over AddressableLight is deprecated, iterate over AddressableLight.get_pixels() instead.")
+  ESPRangeIterator begin() { return this->get_pixels().begin(); }
+  ESPRangeIterator end() { return this->get_pixels().end(); }
+  ESPDEPRECATED("AddressableLight.shift_left() is deprecated, use AddressableLight.get_pixels().shift_left() instead.")
+  void shift_left(int32_t amnt) { return this->get_pixels().shift_left(amnt); }
+  ESPDEPRECATED("AddressableLight.shift_right() is deprecated, use AddressableLight.get_pixels().shift_right() instead.")
+  void shift_right(int32_t amnt) { return this->get_pixels().shift_right(amnt); }
 
  protected:
   virtual AddressableLightValues& get_light_values() = 0;
