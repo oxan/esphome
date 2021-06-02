@@ -27,9 +27,9 @@ class AddressableLight : public LightOutput, public Component {
   ESPRangeView range(int32_t from, int32_t to) {
     from = interpret_index(from, this->size());
     to = interpret_index(to, this->size());
-    return ESPRangeView(this, from, to);
+    return ESPRangeView(this->get_light_values(), from, to);
   }
-  ESPRangeView all() { return ESPRangeView(this, 0, this->size()); }
+  ESPRangeView all() { return ESPRangeView(this->get_light_values(), 0, this->size()); }
   ESPRangeIterator begin() { return this->all().begin(); }
   ESPRangeIterator end() { return this->all().end(); }
   void shift_left(int32_t amnt) {

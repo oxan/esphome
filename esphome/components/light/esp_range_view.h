@@ -8,12 +8,11 @@ namespace light {
 
 int32_t interpret_index(int32_t index, int32_t size);
 
-class AddressableLight;
 class ESPRangeIterator;
 
 class ESPRangeView : public ESPColorSettable {
  public:
-  ESPRangeView(AddressableLight *parent, int32_t begin, int32_t end)
+  ESPRangeView(AddressableLightValues &parent, int32_t begin, int32_t end)
     : parent_(parent), begin_(begin), end_(end < begin ? begin : end) {}
 
   int32_t size() const { return this->end_ - this->begin_; }
@@ -51,7 +50,7 @@ class ESPRangeView : public ESPColorSettable {
  protected:
   friend ESPRangeIterator;
 
-  AddressableLight *parent_;
+  AddressableLightValues &parent_;
   int32_t begin_;
   int32_t end_;
 };
@@ -64,10 +63,10 @@ class ESPRangeIterator {
     return *this;
   }
   bool operator!=(const ESPRangeIterator &other) const { return this->i_ != other.i_; }
-  ESPColorView operator*() const;
+  ESPColorView operator*() const { return this->range_[this->i_]; }
 
  protected:
-  ESPRangeView range_;
+  const ESPRangeView &range_;
   int32_t i_;
 };
 
