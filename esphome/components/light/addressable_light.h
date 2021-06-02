@@ -13,24 +13,19 @@
 namespace esphome {
 namespace light {
 
-using ESPColor ESPDEPRECATED("ESPColor is deprecated, use Color instead.") = Color;
-
 class AddressableLight : public LightOutput, public Component {
  public:
-  virtual int32_t size() const = 0;
   void set_correction(float red, float green, float blue, float white = 1.0f) {
     this->correction_.set_max_brightness(Color(uint8_t(roundf(red * 255.0f)), uint8_t(roundf(green * 255.0f)),
                                                uint8_t(roundf(blue * 255.0f)), uint8_t(roundf(white * 255.0f))));
   }
-  void setup_state(LightState *state) override {
-    this->correction_.calculate_gamma_table(state->get_gamma_correct());
-    this->corrected_values_ = new ColorCorrectingLightValues(this->get_light_values(), this->correction_);
-    this->state_parent_ = state;
-  }
-  void update_state(LightState *state) override;
-  void schedule_show() { this->state_parent_->next_write_ = true; }
 
   void call_setup() override;
+
+  void setup_state(LightState *state) override;
+  void update_state(LightState *state) override;
+
+  void schedule_show() { this->state_parent_->next_write_ = true; }
 
   ESPRangeView get_raw_pixels() { return ESPRangeView{this->get_light_values(), 0, this->size()}; }
   ESPRangeView get_pixels() { return ESPRangeView{*this->corrected_values_, 0, this->size()}; }
@@ -53,6 +48,7 @@ class AddressableLight : public LightOutput, public Component {
   void shift_right(int32_t amnt) { return this->get_pixels().shift_right(amnt); }
 
  protected:
+  virtual int32_t size() const = 0;
   virtual AddressableLightValues& get_light_values() = 0;
 
   ESPColorCorrection correction_{};
@@ -61,6 +57,9 @@ class AddressableLight : public LightOutput, public Component {
   float last_transition_progress_{0.0f};
   float accumulated_alpha_{0.0f};
 };
+
+// Compatibility types
+using ESPColor ESPDEPRECATED("ESPColor is deprecated, use Color instead.") = Color;
 
 }  // namespace light
 }  // namespace esphome

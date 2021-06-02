@@ -30,6 +30,12 @@ Color esp_color_from_light_color_values(LightColorValues val) {
   return Color(r, g, b, w);
 }
 
+void AddressableLight::setup_state(LightState *state) {
+  this->correction_.calculate_gamma_table(state->get_gamma_correct());
+  this->corrected_values_ = new ColorCorrectingLightValues(this->get_light_values(), this->correction_);
+  this->state_parent_ = state;
+}
+
 void AddressableLight::update_state(LightState *state) {
   auto val = state->current_values;
   auto max_brightness = static_cast<uint8_t>(roundf(val.get_brightness() * val.get_state() * 255.0f));

@@ -57,8 +57,6 @@ class FastLEDLightOutput : public light::AddressableLight {
   /// Only for custom effects: Get the internal controller.
   CLEDController *get_controller() const { return this->controller_; }
 
-  inline int32_t size() const override { return this->num_leds_; }
-
   /// Set a maximum refresh rate in µs as some lights do not like being updated too often.
   void set_max_refresh_rate(uint32_t interval_us) { this->max_refresh_rate_ = interval_us; }
 
@@ -254,6 +252,7 @@ class FastLEDLightOutput : public light::AddressableLight {
   float get_setup_priority() const override { return setup_priority::HARDWARE; }
 
  protected:
+  int32_t size() const override { return this->num_leds_; }
   light::AddressableLightValues& get_light_values() override { return *this->light_values_; }
 
   CLEDController *controller_{nullptr};
