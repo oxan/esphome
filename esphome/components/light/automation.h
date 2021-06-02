@@ -31,6 +31,7 @@ template<typename... Ts> class LightControlAction : public Action<Ts...> {
   TEMPLATABLE_VALUE(uint32_t, transition_length)
   TEMPLATABLE_VALUE(uint32_t, flash_length)
   TEMPLATABLE_VALUE(float, brightness)
+  TEMPLATABLE_VALUE(uint32_t, color)
   TEMPLATABLE_VALUE(float, red)
   TEMPLATABLE_VALUE(float, green)
   TEMPLATABLE_VALUE(float, blue)
@@ -42,9 +43,15 @@ template<typename... Ts> class LightControlAction : public Action<Ts...> {
     auto call = this->parent_->make_call();
     call.set_state(this->state_.optional_value(x...));
     call.set_brightness(this->brightness_.optional_value(x...));
-    call.set_red(this->red_.optional_value(x...));
-    call.set_green(this->green_.optional_value(x...));
-    call.set_blue(this->blue_.optional_value(x...));
+    if (this->color_.has_value()) {
+      call.set_rgb((this->color_.value() >> 16 & 0xFF) / 255.0f,
+                   (this->color_.value() >> 8 & 0xFF) / 255.0f,
+                   (this->color_.value() >> 0 & 0xFF) / 255.0f);
+    } else {
+      call.set_red(this->red_.optional_value(x...));
+      call.set_green(this->green_.optional_value(x...));
+      call.set_blue(this->blue_.optional_value(x...));
+    }
     call.set_white(this->white_.optional_value(x...));
     call.set_color_temperature(this->color_temperature_.optional_value(x...));
     call.set_effect(this->effect_.optional_value(x...));
