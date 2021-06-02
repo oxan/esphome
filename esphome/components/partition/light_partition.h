@@ -31,9 +31,30 @@ class AddressableSegment {
   bool reversed_;
 };
 
+class PartitionedLightValues : public light::AddressableLightValues {
+ public:
+  PartitionedLightValues(const std::vector<AddressableSegment>& segments) : segments_(segments) {}
+
+  uint8_t get_red(int32_t index) const override { return this->find_pixel(index).get_red(); }
+  uint8_t get_green(int32_t index) const override { return this->find_pixel(index).get_green(); }
+  uint8_t get_blue(int32_t index) const override { return this->find_pixel(index).get_blue(); }
+  uint8_t get_white(int32_t index) const override { return this->find_pixel(index).get_white(); }
+  uint8_t get_effect_data(int32_t index) const override { return this->find_pixel(index).get_effect_data(); }
+  void set_red(int32_t index, uint8_t red) override { this->find_pixel(index).set_red(red); }
+  void set_green(int32_t index, uint8_t green) override { this->find_pixel(index).set_green(green); }
+  void set_blue(int32_t index, uint8_t blue) override { this->find_pixel(index).set_blue(blue); }
+  void set_white(int32_t index, uint8_t white) override { this->find_pixel(index).set_white(white); }
+  void set_effect_data(int32_t index, uint8_t effect_data) override { this->find_pixel(index).set_effect_data(effect_data); }
+
+ protected:
+  light::ESPColorView find_pixel(int32_t index) const;
+
+  const std::vector<AddressableSegment>& segments_;
+};
+
 class PartitionLightOutput : public light::AddressableLight {
  public:
-  explicit PartitionLightOutput(std::vector<AddressableSegment> segments) : segments_(std::move(segments)) {
+  explicit PartitionLightOutput(std::vector<AddressableSegment> segments) : segments_(std::move(segments)), light_values_(segments_) {
     int32_t off = 0;
     for (auto &seg : this->segments_) {
       seg.set_dst_offset(off);
@@ -52,37 +73,10 @@ class PartitionLightOutput : public light::AddressableLight {
   }
 
  protected:
-  light::ESPColorView get_view_internal(int32_t index) const override {
-    uint32_t lo = 0;
-    uint32_t hi = this->segments_.size() - 1;
-    while (lo < hi) {
-      uint32_t mid = (lo + hi) / 2;
-      int32_t begin = this->segments_[mid].get_dst_offset();
-      int32_t end = begin + this->segments_[mid].get_size();
-      if (index < begin) {
-        hi = mid - 1;
-      } else if (index >= end) {
-        lo = mid + 1;
-      } else {
-        lo = hi = mid;
-      }
-    }
-    auto &seg = this->segments_[lo];
-    // offset within the segment
-    int32_t seg_off = index - seg.get_dst_offset();
-    // offset within the src
-    int32_t src_off;
-    if (seg.is_reversed())
-      src_off = seg.get_src_offset() + seg.get_size() - seg_off - 1;
-    else
-      src_off = seg.get_src_offset() + seg_off;
-
-    auto view = (*seg.get_src())[src_off];
-    view.raw_set_color_correction(&this->correction_);
-    return view;
-  }
+  light::AddressableLightValues& get_light_values() override { return this->light_values_; }
 
   std::vector<AddressableSegment> segments_;
+  PartitionedLightValues light_values_;
 };
 
 }  // namespace partition

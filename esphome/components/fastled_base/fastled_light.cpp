@@ -9,8 +9,7 @@ static const char *TAG = "fastled";
 void FastLEDLightOutput::setup() {
   ESP_LOGCONFIG(TAG, "Setting up FastLED light...");
   this->controller_->init();
-  this->controller_->setLeds(this->leds_, this->num_leds_);
-  this->effect_data_ = new uint8_t[this->num_leds_];
+  this->controller_->setLeds(this->light_values_->leds_, this->num_leds_);
   if (!this->max_refresh_rate_.has_value()) {
     this->set_max_refresh_rate(this->controller_->getMaxRefreshRate());
   }

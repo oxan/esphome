@@ -16,6 +16,42 @@
 namespace esphome {
 namespace fastled_base {
 
+class FastLEDLightValues : public light::AddressableLightValues {
+ public:
+  FastLEDLightValues(int count) {
+    this->leds_ = new CRGB[count];
+    this->effect_data_ = new uint8_t[count];
+  }
+  ~FastLEDLightValues() {
+    delete this->leds_;
+    delete this->effect_data_;
+  }
+
+  uint8_t get_red(int32_t index) const override { return leds_[index].r; }
+  uint8_t get_green(int32_t index) const override { return leds_[index].g; }
+  uint8_t get_blue(int32_t index) const override { return leds_[index].b; }
+  uint8_t get_white(int32_t index) const override { return 0; }
+  uint8_t get_effect_data(int32_t index) const override { return effect_data_[index]; }
+  Color get(int32_t index) const override { return Color(leds_[index].r, leds_[index].g, leds_[index].b, 0); }
+
+  void set_red(int32_t index, uint8_t red) override { leds_[index].r = red; }
+  void set_green(int32_t index, uint8_t green) override { leds_[index].g = green; }
+  void set_blue(int32_t index, uint8_t blue) override { leds_[index].b = blue; }
+  void set_white(int32_t index, uint8_t white) override {}
+  void set_effect_data(int32_t index, uint8_t effect_data) override { effect_data_[index] = effect_data; }
+  void set(int32_t index, const Color &color) override {
+    leds_[index].red = color.red;
+    leds_[index].green = color.green;
+    leds_[index].blue = color.blue;
+  }
+
+ protected:
+  friend class FastLEDLightOutput;
+
+  CRGB *leds_{nullptr};
+  uint8_t *effect_data_{nullptr};
+};
+
 class FastLEDLightOutput : public light::AddressableLight {
  public:
   /// Only for custom effects: Get the internal controller.
@@ -30,10 +66,10 @@ class FastLEDLightOutput : public light::AddressableLight {
   CLEDController &add_leds(CLEDController *controller, int num_leds) {
     this->controller_ = controller;
     this->num_leds_ = num_leds;
-    this->leds_ = new CRGB[num_leds];
+    this->light_values_ = new FastLEDLightValues(num_leds);
 
     for (int i = 0; i < this->num_leds_; i++)
-      this->leds_[i] = CRGB::Black;
+      this->light_values_->leds_[i] = CRGB::Black;
 
     return *this->controller_;
   }
@@ -218,14 +254,10 @@ class FastLEDLightOutput : public light::AddressableLight {
   float get_setup_priority() const override { return setup_priority::HARDWARE; }
 
  protected:
-  light::ESPColorView get_view_internal(int32_t index) const override {
-    return {&this->leds_[index].r,      &this->leds_[index].g, &this->leds_[index].b, nullptr,
-            &this->effect_data_[index], &this->correction_};
-  }
+  light::AddressableLightValues& get_light_values() override { return *this->light_values_; }
 
   CLEDController *controller_{nullptr};
-  CRGB *leds_{nullptr};
-  uint8_t *effect_data_{nullptr};
+  FastLEDLightValues *light_values_{nullptr};
   int num_leds_{0};
   uint32_t last_refresh_{0};
   optional<uint32_t> max_refresh_rate_{};

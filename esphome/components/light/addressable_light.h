@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/core/color.h"
+#include "addressable_light_values.h"
 #include "esp_color_correction.h"
 #include "esp_color_view.h"
 #include "esp_range_view.h"
@@ -17,8 +18,12 @@ using ESPColor ESPDEPRECATED("ESPColor is deprecated, use Color instead.") = Col
 class AddressableLight : public LightOutput, public Component {
  public:
   virtual int32_t size() const = 0;
-  ESPColorView operator[](int32_t index) const { return this->get_view_internal(interpret_index(index, this->size())); }
-  ESPColorView get(int32_t index) { return this->get_view_internal(interpret_index(index, this->size())); }
+  ESPColorView operator[](int32_t index) {
+    return ESPColorView{this->get_light_values(), interpret_index(index, this->size()), &this->correction_};
+  }
+  ESPColorView get(int32_t index) {
+    return ESPColorView{this->get_light_values(), interpret_index(index, this->size()), &this->correction_};
+  }
   ESPRangeView range(int32_t from, int32_t to) {
     from = interpret_index(from, this->size());
     to = interpret_index(to, this->size());
@@ -59,7 +64,7 @@ class AddressableLight : public LightOutput, public Component {
   void call_setup() override;
 
  protected:
-  virtual ESPColorView get_view_internal(int32_t index) const = 0;
+  virtual AddressableLightValues& get_light_values() = 0;
 
   ESPColorCorrection correction_{};
   LightState *state_parent_{nullptr};
