@@ -5,7 +5,6 @@
 #include "esphome/core/color.h"
 #include "addressable_light_values.h"
 #include "esp_color_correction.h"
-#include "esp_color_view.h"
 #include "esp_range_view.h"
 #include "light_output.h"
 #include "light_state.h"
@@ -32,9 +31,9 @@ class AddressableLight : public LightOutput, public Component {
 
   // Compatibility methods
   ESPDEPRECATED("AddressableLight[] is deprecated, use AddressableLight.get_pixels()[] instead.")
-  ESPColorView operator[](int32_t index) { return this->get_pixels()[index]; }
+  ESPRangeView operator[](int32_t index) { return this->get_pixels()[index]; }
   ESPDEPRECATED("AddressableLight.get() is deprecated, use AddressableLight.get_pixels().get() instead.")
-  ESPColorView get(int32_t index) { return this->get_pixels()[index]; }
+  ESPRangeView get(int32_t index) { return this->get_pixels()[index]; }
   ESPDEPRECATED("AddressableLight.range() is deprecated, use AddressableLight.get_pixels().range() instead.")
   ESPRangeView range(int32_t from, int32_t to) { return this->get_pixels().range(from, to); }
   ESPDEPRECATED("AddressableLight.all() is deprecated, use AddressableLight.get_pixels() instead.")
@@ -60,6 +59,7 @@ class AddressableLight : public LightOutput, public Component {
 
 // Compatibility types
 using ESPColor ESPDEPRECATED("ESPColor is deprecated, use Color instead.") = Color;
+using ESPColorView ESPDEPRECATED("ESPColorView is deprecated, use a (one-item) ESPRangeView instead.") = ESPRangeView;
 
 }  // namespace light
 }  // namespace esphome

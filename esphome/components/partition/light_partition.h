@@ -47,7 +47,7 @@ class PartitionedLightValues : public light::AddressableLightValues {
   void set_effect_data(int32_t index, uint8_t effect_data) override { this->find_pixel(index).set_effect_data(effect_data); }
 
  protected:
-  light::ESPColorView find_pixel(int32_t index) const;
+  light::ESPRangeView find_pixel(int32_t index) const;
 
   const std::vector<AddressableSegment>& segments_;
 };

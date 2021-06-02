@@ -6,7 +6,7 @@ namespace partition {
 
 static const char *TAG = "partition.light";
 
-light::ESPColorView PartitionedLightValues::find_pixel(int32_t index) const {
+light::ESPRangeView PartitionedLightValues::find_pixel(int32_t index) const {
   uint32_t lo = 0;
   uint32_t hi = this->segments_.size() - 1;
   while (lo < hi) {
