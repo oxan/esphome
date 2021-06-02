@@ -17,17 +17,10 @@ using ESPColor ESPDEPRECATED("esphome::light::ESPColor is deprecated, use esphom
 
 class AddressableLight : public LightOutput, public Component {
  public:
+  /// Not a public API, will be made protected in the future. Use pixels().size() instead.
   virtual int32_t size() const = 0;
-  ESPColorView operator[](int32_t index) const { return this->get_view_internal(interpret_index(index, this->size())); }
-  ESPColorView get(int32_t index) { return this->get_view_internal(interpret_index(index, this->size())); }
-  ESPRangeView range(int32_t from, int32_t to) {
-    from = interpret_index(from, this->size());
-    to = interpret_index(to, this->size());
-    return ESPRangeView(this, from, to);
-  }
-  ESPRangeView all() { return ESPRangeView(this, 0, this->size()); }
-  ESPRangeIterator begin() { return this->all().begin(); }
-  ESPRangeIterator end() { return this->all().end(); }
+
+  ESPRangeView pixels() { return ESPRangeView{this, 0, this->size()}; }
 
   // Indicates whether an effect that directly updates the output buffer is active to prevent overwriting
   bool is_effect_active() const { return this->effect_active_; }
@@ -47,15 +40,25 @@ class AddressableLight : public LightOutput, public Component {
   void call_setup() override;
 
   // Legacy methods
-  ESPDEPRECATED("AddressableLight.shift_left() is deprecated, use AddressableLight.all().shift_left() instead.",
-                "2021.9")
-  void shift_left(int32_t amnt) { return this->all().shift_left(amnt); }
-  ESPDEPRECATED("AddressableLight.shift_right() is deprecated, use AddressableLight.all().shift_right() instead.",
-                "2021.9")
-  void shift_right(int32_t amnt) { return this->all().shift_right(amnt); }
+  ESPDEPRECATED("AddressableLight[] is deprecated, use pixels()[] instead", "2021.9")
+  ESPColorView operator[](int32_t index) { return this->pixels()[index]; }
+  ESPDEPRECATED("AddressableLight.get() is deprecated, use pixels().get() instead", "2021.9")
+  ESPColorView get(int32_t index) { return this->pixels()[index]; }
+  ESPDEPRECATED("AddressableLight.range() is deprecated, use pixels().range() instead", "2021.9")
+  ESPRangeView range(int32_t from, int32_t to) { return this->pixels().range(from, to); }
+  ESPDEPRECATED("AddressableLight.all() is deprecated, use pixels() instead", "2021.9")
+  ESPRangeView all() { return this->pixels(); }
+  ESPDEPRECATED("Iteration over AddressableLight is deprecated, iterate over pixels() instead", "2021.9")
+  ESPRangeIterator begin() { return this->pixels().begin(); }
+  ESPRangeIterator end() { return this->pixels().end(); }
+  ESPDEPRECATED("AddressableLight.shift_left() is deprecated, use pixels().shift_left() instead.", "2021.9")
+  void shift_left(int32_t amnt) { return this->pixels().shift_left(amnt); }
+  ESPDEPRECATED("AddressableLight.shift_right() is deprecated, use pixels().shift_right() instead.", "2021.9")
+  void shift_right(int32_t amnt) { return this->pixels().shift_right(amnt); }
 
  protected:
   friend class AddressableLightTransformer;
+  friend class ESPRangeView;
 
   virtual ESPColorView get_view_internal(int32_t index) const = 0;
 

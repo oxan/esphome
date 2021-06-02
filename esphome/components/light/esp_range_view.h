@@ -37,6 +37,9 @@ class ESPRangeView : public ESPColorSettable {
   void lighten(uint8_t delta) override;
   void darken(uint8_t delta) override;
 
+  ESPRangeView all() const { return *this; }
+  ESPRangeView range(int32_t from, int32_t to) const;
+
   void shift_left(int32_t amnt);
   void shift_right(int32_t amnt);
 

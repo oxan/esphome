@@ -12,17 +12,15 @@ int32_t HOT interpret_index(int32_t index, int32_t size) {
 
 ESPColorView ESPRangeView::operator[](int32_t index) const {
   index = interpret_index(index, this->size()) + this->begin_;
-  return (*this->parent_)[index];
+  return this->parent_->get_view_internal(index);
 }
 ESPRangeIterator ESPRangeView::begin() { return {*this, this->begin_}; }
 ESPRangeIterator ESPRangeView::end() { return {*this, this->end_}; }
 
 void ESPRangeView::set(const Color &color) {
-  for (int32_t i = this->begin_; i < this->end_; i++) {
-    (*this->parent_)[i] = color;
-  }
+  for (auto c : *this)
+    c.set(color);
 }
-
 void ESPRangeView::set_red(uint8_t red) {
   for (auto c : *this)
     c.set_red(red);
@@ -59,6 +57,12 @@ void ESPRangeView::lighten(uint8_t delta) {
 void ESPRangeView::darken(uint8_t delta) {
   for (auto c : *this)
     c.darken(delta);
+}
+
+ESPRangeView ESPRangeView::range(int32_t from, int32_t to) const {
+  from = interpret_index(from, this->size());
+  to = interpret_index(to, this->size());
+  return {this->parent_, this->begin_ + from, this->begin_ + to};
 }
 
 void ESPRangeView::shift_left(int32_t amnt) {
@@ -110,7 +114,7 @@ ESPRangeView &ESPRangeView::operator=(const ESPRangeView &rhs) {  // NOLINT
   return *this;
 }
 
-ESPColorView ESPRangeIterator::operator*() const { return this->range_.parent_->get(this->i_); }
+ESPColorView ESPRangeIterator::operator*() const { return this->range_[this->i_]; }
 
 }  // namespace light
 }  // namespace esphome
