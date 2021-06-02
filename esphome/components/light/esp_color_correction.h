@@ -18,6 +18,13 @@ class ESPColorCorrection {
   const Color& get_max_brightness() const { return this->max_brightness_; }
   float get_gamma_correction() const { return this->gamma_correction_; }
 
+  inline uint8_t correct_gamma(uint8_t brightness) const ALWAYS_INLINE {
+    return this->gamma_table_[brightness];
+  }
+  inline float correct_gamma(float brightness) const ALWAYS_INLINE {
+    return gamma_correct(brightness, this->gamma_correction_);
+  }
+
   inline Color correct(Color color, uint8_t brightness) const ALWAYS_INLINE {
     // corrected = (uncorrected * max_brightness * local_brightness) ^ gamma
     return Color(this->correct_red(color.red, brightness), this->correct_green(color.green, brightness),
@@ -27,19 +34,32 @@ class ESPColorCorrection {
     uint8_t res = esp_scale8(esp_scale8(red, this->max_brightness_.red), brightness);
     return this->gamma_table_[res];
   }
+  inline float correct_red(float red, float brightness) const ALWAYS_INLINE {
+    return gamma_correct(scale_float(red, this->max_brightness_.red) * brightness, this->gamma_correction_);
+  }
   inline uint8_t correct_green(uint8_t green, uint8_t brightness) const ALWAYS_INLINE {
     uint8_t res = esp_scale8(esp_scale8(green, this->max_brightness_.green), brightness);
     return this->gamma_table_[res];
   }
+  inline float correct_green(float green, float brightness) const ALWAYS_INLINE {
+    return gamma_correct(scale_float(green, this->max_brightness_.green) * brightness, this->gamma_correction_);
+  }
   inline uint8_t correct_blue(uint8_t blue, uint8_t brightness) const ALWAYS_INLINE {
     uint8_t res = esp_scale8(esp_scale8(blue, this->max_brightness_.blue), brightness);
     return this->gamma_table_[res];
+  }
+  inline float correct_blue(float blue, float brightness) const ALWAYS_INLINE {
+    return gamma_correct(scale_float(blue, this->max_brightness_.blue) * brightness, this->gamma_correction_);
   }
   inline uint8_t correct_white(uint8_t white, uint8_t brightness) const ALWAYS_INLINE {
     // do not scale white value with brightness
     uint8_t res = esp_scale8(white, this->max_brightness_.white);
     return this->gamma_table_[res];
   }
+  inline float correct_white(float white, float brightness) const ALWAYS_INLINE {
+    return gamma_correct(scale_float(white, this->max_brightness_.white), this->gamma_correction_);
+  }
+
   inline Color uncorrect(Color color, uint8_t brightness) const ALWAYS_INLINE {
     // uncorrected = corrected^(1/gamma) / (max_brightness * local_brightness)
     return Color(this->uncorrect_red(color.red, brightness), this->uncorrect_green(color.green, brightness),
@@ -75,6 +95,10 @@ class ESPColorCorrection {
   }
 
  protected:
+  inline static float scale_float(float i, float max) ALWAYS_INLINE {
+    return i * (1 + max) / 256;
+  }
+
   Color max_brightness_;
   float gamma_correction_;
   uint8_t gamma_table_[256];
