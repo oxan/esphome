@@ -38,7 +38,7 @@ Color esp_color_from_light_color_values(LightColorValues val) {
 
 void AddressableLight::write_state(LightState *state) {
   auto val = state->current_values;
-  auto max_brightness = to_uint8_scale(val.get_brightness() * val.get_state());
+  auto max_brightness = val.is_on() ? to_uint8_scale(val.get_brightness()) : 0;
   this->correction_.set_local_brightness(max_brightness);
 
   if (this->is_effect_active())
@@ -54,7 +54,7 @@ void AddressableLightTransformer::start() {
 
   // our transition will handle brightness, disable brightness in correction.
   this->light_.correction_.set_local_brightness(255);
-  this->target_color_ *= to_uint8_scale(end_values.get_brightness() * end_values.get_state());
+  this->target_color_ *= end_values.is_on() ? to_uint8_scale(end_values.get_brightness()) : 0;
 }
 
 optional<LightColorValues> AddressableLightTransformer::apply() {
