@@ -19,6 +19,9 @@ class LightOutputUtil {
   /// Get the color temperature as a value in the range 0-1, where 0 is the lowest color temperature supported by the
   /// output, and 1 the highest.
   static float as_relative_color_temp(const LightState &state);
+
+  /// Emulate the color temperature through RGB channels.
+  static void color_temp_as_rgb(const LightState &state, float *red, float *green, float *blue);
 };
 
 }  // namespace light
