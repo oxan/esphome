@@ -112,17 +112,23 @@ class LightState : public Nameable, public Component {
   /// Add effects for this light state.
   void add_effects(const std::vector<LightEffect *> &effects);
 
+  ESPDEPRECATED("LightState.current_values_as_binary() is deprecated, use current_values.is_on() instead.")
   void current_values_as_binary(bool *binary);
 
+  ESPDEPRECATED("LightState.current_values_as_brightness() is deprecated, use LightOutputUtil.as_brightness() instead.")
   void current_values_as_brightness(float *brightness);
 
+  ESPDEPRECATED("LightState.current_values_as_rgb() is deprecated, use LightOutputUtil.as_rgb() instead.")
   void current_values_as_rgb(float *red, float *green, float *blue, bool color_interlock = false);
 
+  ESPDEPRECATED("LightState.current_values_as_rgbw() is deprecated, use LightOutputUtil.as_rgbw() instead.")
   void current_values_as_rgbw(float *red, float *green, float *blue, float *white, bool color_interlock = false);
 
+  ESPDEPRECATED("LightState.current_values_as_rgbww() is deprecated, use LightOutputUtil.as_rgbww() instead.")
   void current_values_as_rgbww(float *red, float *green, float *blue, float *cold_white, float *warm_white,
                                bool constant_brightness = false, bool color_interlock = false);
 
+  ESPDEPRECATED("LightState.current_values_as_cwww() is deprecated, use LightOutputUtil.as_cwww() instead.")
   void current_values_as_cwww(float *cold_white, float *warm_white, bool constant_brightness = false);
 
  protected:

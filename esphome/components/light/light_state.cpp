@@ -1,5 +1,6 @@
 #include "light_state.h"
 #include "light_output.h"
+#include "light_output_util.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -161,28 +162,20 @@ void LightState::add_effects(const std::vector<LightEffect *> &effects) {
   }
 }
 
-void LightState::current_values_as_binary(bool *binary) { this->current_values.as_binary(binary); }
-void LightState::current_values_as_brightness(float *brightness) {
-  this->current_values.as_brightness(brightness, this->gamma_correct_);
-}
+void LightState::current_values_as_binary(bool *binary) { *binary = this->current_values.is_on(); }
+void LightState::current_values_as_brightness(float *brightness) { *brightness = LightOutputUtil::as_brightness(*this); }
 void LightState::current_values_as_rgb(float *red, float *green, float *blue, bool color_interlock) {
-  auto traits = this->get_traits();
-  this->current_values.as_rgb(red, green, blue, this->gamma_correct_, false);
+  LightOutputUtil::as_rgb(*this, red, green, blue);
 }
 void LightState::current_values_as_rgbw(float *red, float *green, float *blue, float *white, bool color_interlock) {
-  auto traits = this->get_traits();
-  this->current_values.as_rgbw(red, green, blue, white, this->gamma_correct_, false);
+  LightOutputUtil::as_rgbw(*this, red, green, blue, white);
 }
 void LightState::current_values_as_rgbww(float *red, float *green, float *blue, float *cold_white, float *warm_white,
                                          bool constant_brightness, bool color_interlock) {
-  auto traits = this->get_traits();
-  this->current_values.as_rgbww(traits.get_min_mireds(), traits.get_max_mireds(), red, green, blue, cold_white,
-                                warm_white, this->gamma_correct_, constant_brightness, false);
+  LightOutputUtil::as_rgbww(*this, red, green, blue, cold_white, warm_white, constant_brightness);
 }
 void LightState::current_values_as_cwww(float *cold_white, float *warm_white, bool constant_brightness) {
-  auto traits = this->get_traits();
-  this->current_values.as_cwww(traits.get_min_mireds(), traits.get_max_mireds(), cold_white, warm_white,
-                               this->gamma_correct_, constant_brightness);
+  LightOutputUtil::as_cwww(*this, cold_white, warm_white, constant_brightness);
 }
 
 void LightState::start_effect_(uint32_t effect_index) {
