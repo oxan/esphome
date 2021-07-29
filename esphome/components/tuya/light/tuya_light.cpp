@@ -1,4 +1,5 @@
 #include "esphome/core/log.h"
+#include "esphome/components/light/light_output_util.h"
 #include "tuya_light.h"
 
 namespace esphome {
@@ -60,8 +61,7 @@ light::LightTraits TuyaLight::get_traits() {
 void TuyaLight::setup_state(light::LightState *state) { state_ = state; }
 
 void TuyaLight::write_state(light::LightState *state) {
-  float brightness;
-  state->current_values_as_brightness(&brightness);
+  float brightness = light::LightOutputUtil::as_brightness(*state);
 
   if (brightness == 0.0f) {
     // turning off, first try via switch (if exists), then dimmer

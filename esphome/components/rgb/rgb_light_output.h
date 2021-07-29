@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/output/float_output.h"
 #include "esphome/components/light/light_output.h"
+#include "esphome/components/light/light_output_util.h"
 
 namespace esphome {
 namespace rgb {
@@ -20,7 +21,7 @@ class RGBLightOutput : public light::LightOutput {
   }
   void write_state(light::LightState *state) override {
     float red, green, blue;
-    state->current_values_as_rgb(&red, &green, &blue, false);
+    light::LightOutputUtil::as_rgb(*state, &red, &green, &blue);
     this->red_->set_level(red);
     this->green_->set_level(green);
     this->blue_->set_level(blue);

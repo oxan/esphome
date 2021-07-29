@@ -16,9 +16,7 @@ class BinaryLightOutput : public light::LightOutput {
     return traits;
   }
   void write_state(light::LightState *state) override {
-    bool binary;
-    state->current_values_as_binary(&binary);
-    if (binary)
+    if (state->current_values.is_on())
       this->output_->turn_on();
     else
       this->output_->turn_off();

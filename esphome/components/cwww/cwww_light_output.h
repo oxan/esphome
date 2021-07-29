@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/output/float_output.h"
 #include "esphome/components/light/light_output.h"
+#include "esphome/components/light/light_output_util.h"
 
 namespace esphome {
 namespace cwww {
@@ -23,7 +24,7 @@ class CWWWLightOutput : public light::LightOutput {
   }
   void write_state(light::LightState *state) override {
     float cwhite, wwhite;
-    state->current_values_as_cwww(&cwhite, &wwhite, this->constant_brightness_);
+    light::LightOutputUtil::as_cwww(*state, &cwhite, &wwhite, this->constant_brightness_);
     this->cold_white_->set_level(cwhite);
     this->warm_white_->set_level(wwhite);
   }

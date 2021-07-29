@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/output/float_output.h"
 #include "esphome/components/light/light_output.h"
+#include "esphome/components/light/light_output_util.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -41,7 +42,7 @@ class HBridgeLightOutput : public PollingComponent, public light::LightOutput {
   float get_setup_priority() const override { return setup_priority::HARDWARE; }
 
   void write_state(light::LightState *state) override {
-    state->current_values_as_cwww(&this->pina_duty_, &this->pinb_duty_, false);
+    light::LightOutputUtil::as_cwww(*this, &this->pina_duty_, &this->pinb_duty_, false);
   }
 
  protected:

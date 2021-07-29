@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/components/output/float_output.h"
 #include "esphome/components/light/light_output.h"
+#include "esphome/components/light/light_output_util.h"
 
 namespace esphome {
 namespace monochromatic {
@@ -16,8 +17,7 @@ class MonochromaticLightOutput : public light::LightOutput {
     return traits;
   }
   void write_state(light::LightState *state) override {
-    float bright;
-    state->current_values_as_brightness(&bright);
+    float bright = light::LightOutputUtil::as_brightness(state);
     this->output_->set_level(bright);
   }
 
