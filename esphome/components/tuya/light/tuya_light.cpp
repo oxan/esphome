@@ -75,9 +75,7 @@ void TuyaLight::write_state(light::LightState *state) {
 
   if (this->color_temperature_id_.has_value()) {
     uint32_t color_temp_int =
-        static_cast<uint32_t>(this->color_temperature_max_value_ *
-                              (state->current_values.get_color_temperature() - this->cold_white_temperature_) /
-                              (this->warm_white_temperature_ - this->cold_white_temperature_));
+        static_cast<uint32_t>(this->color_temperature_max_value_ * light::LightOutputUtil::as_relative_color_temp(*state));
     parent_->set_datapoint_value(*this->color_temperature_id_, color_temp_int);
   }
 

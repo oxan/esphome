@@ -31,7 +31,7 @@ class LightState : public Nameable, public Component {
   /// Construct this LightState using the provided traits and name.
   LightState(const std::string &name, LightOutput *output);
 
-  LightTraits get_traits();
+  LightTraits get_traits() const;
 
   /// Make a light state call
   LightCall turn_on();

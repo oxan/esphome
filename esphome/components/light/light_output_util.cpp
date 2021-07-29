@@ -58,5 +58,14 @@ void LightOutputUtil::as_cwww(const LightState &state, float *cold_white, float 
   }
 }
 
+float LightOutputUtil::as_relative_color_temp(const LightState &state) {
+  auto values = state.current_values;
+  if (!(values.get_color_mode() & ColorMode::COLOR_TEMPERATURE))
+    return 0;
+
+  auto traits = state.get_traits();
+  return (values.get_color_temperature() - traits.get_min_mireds()) / (traits.get_max_mireds() - traits.get_min_mireds());
+}
+
 }  // namespace light
 }  // namespace esphome
