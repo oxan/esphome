@@ -17,8 +17,8 @@ class LightTransformer {
     this->start();
   }
 
-  /// Indicates whether this transformation is finished.
-  virtual bool is_finished() { return this->get_progress_() >= 1.0f; }
+  /// Indicates whether this transformation is completed and should be stopped.
+  virtual bool is_completed() { return this->get_progress_() >= 1.0f; }
 
   /// This will be called before the transition is started.
   virtual void start() {}
@@ -27,8 +27,11 @@ class LightTransformer {
   /// light directly, or return LightColorValues that will be applied.
   virtual optional<LightColorValues> apply() = 0;
 
-  /// This will be called after transition is finished.
-  virtual void stop() {}
+  /// This will be called after transition is completed.
+  virtual void finish() {}
+
+  /// This will be called if the transition is aborted before it is completed.
+  virtual void abort() {}
 
   const LightColorValues &get_start_values() const { return this->start_values_; }
 

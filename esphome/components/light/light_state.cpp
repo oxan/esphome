@@ -106,13 +106,18 @@ void LightState::loop() {
 
   // Apply transformer (if any)
   if (this->transformer_ != nullptr) {
+    // check for completion first, so that apply() is called at least once in completed state.
+    bool completed = this->transformer_->is_completed();
+
     auto values = this->transformer_->apply();
     this->next_write_ = values.has_value();  // don't write if transformer doesn't want us to
     if (values.has_value())
       this->current_values = *values;
 
-    if (this->transformer_->is_finished()) {
-      this->transformer_->stop();
+    if (completed) {
+      this->transformer_->finish();
+      // transformer might not've written, so update current_values as it can be outdated.
+      this->current_values = this->transformer_->get_target_values();
       this->transformer_ = nullptr;
       this->target_state_reached_callback_.call();
     }
@@ -218,6 +223,8 @@ void LightState::stop_effect_() {
 }
 
 void LightState::start_transition_(const LightColorValues &target, uint32_t length) {
+  if (this->transformer_ != nullptr)
+    this->transformer_->abort();
   this->transformer_ = this->output_->create_default_transition();
   this->transformer_->setup(this->current_values, target, length);
   this->remote_values = target;
@@ -230,12 +237,16 @@ void LightState::start_flash_(const LightColorValues &target, uint32_t length) {
   if (this->transformer_ != nullptr)
     end_colors = this->transformer_->get_target_values();
 
+  if (this->transformer_ != nullptr)
+    this->transformer_->abort();
   this->transformer_ = make_unique<LightFlashTransformer>(*this);
   this->transformer_->setup(end_colors, target, length);
   this->remote_values = target;
 }
 
 void LightState::set_immediately_(const LightColorValues &target, bool set_remote_values) {
+  if (this->transformer_ != nullptr)
+    this->transformer_->abort();
   this->transformer_ = nullptr;
   this->current_values = target;
   if (set_remote_values) {
