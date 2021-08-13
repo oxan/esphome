@@ -62,9 +62,12 @@ class LightFlashTransformer : public LightTransformer {
 
   // Restore the original values after the flash.
   void finish() override {
-    this->state_.current_values = this->get_start_values();
-    this->state_.remote_values = this->get_start_values();
-    this->state_.publish_state();
+    this->state_.make_call()
+        .from_light_color_values(this->get_start_values())
+        .set_publish(true)
+        .set_save(false)
+        .set_transition_length(0)
+        .perform();
   }
 
  protected:

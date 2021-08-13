@@ -135,7 +135,6 @@ uint32_t LightState::hash_base() { return 1114400283; }
 
 void LightState::publish_state() {
   this->remote_values_callback_.call();
-  this->next_write_ = true;
 }
 
 LightOutput *LightState::get_output() const { return this->output_; }
