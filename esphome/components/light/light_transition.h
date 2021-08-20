@@ -6,8 +6,8 @@
 namespace esphome {
 namespace light {
 
-/// Base class for all light color transformers, such as transitions or flashes.
-class LightTransformer {
+/// Base class for light transitions.
+class LightTransition {
  public:
   void setup(const LightColorValues &start_values, const LightColorValues &target_values, uint32_t length) {
     this->start_time_ = millis();
@@ -23,7 +23,7 @@ class LightTransformer {
   /// This will be called before the transition is started.
   virtual void start() {}
 
-  /// This will be called while the transformer is active to apply the transition to the light. Can either write to the
+  /// This will be called while the transition is active to apply the transition to the light. Can either write to the
   /// light directly, or return LightColorValues that will be applied.
   virtual optional<LightColorValues> apply() = 0;
 

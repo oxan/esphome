@@ -4,12 +4,12 @@
 #include "esphome/core/helpers.h"
 #include "light_color_values.h"
 #include "light_state.h"
-#include "light_transformer.h"
+#include "light_transition.h"
 
 namespace esphome {
 namespace light {
 
-class LightTransitionTransformer : public LightTransformer {
+class FadeTransition : public LightTransition {
  public:
   void start() override {
     // When turning light on from off state, use target state and only increase brightness from zero.
@@ -47,7 +47,7 @@ class LightTransitionTransformer : public LightTransformer {
     if (this->changing_color_mode_)
       p = p < 0.5f ? p * 2 : (p - 0.5) * 2;
 
-    float v = LightTransitionTransformer::smoothed_progress(p);
+    float v = FadeTransition::smoothed_progress(p);
     return LightColorValues::lerp(start, end, v);
   }
 

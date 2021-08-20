@@ -7,7 +7,7 @@
 #include "light_color_values.h"
 #include "light_effect.h"
 #include "light_traits.h"
-#include "light_transformer.h"
+#include "light_transition.h"
 
 namespace esphome {
 namespace light {
@@ -167,8 +167,8 @@ class LightState : public Nameable, public Component {
   LightOutput *output_;
   /// Value for storing the index of the currently active effect. 0 if no effect is active
   uint32_t active_effect_index_{};
-  /// The currently active transformer for this light (transition/flash).
-  std::unique_ptr<LightTransformer> transformer_{nullptr};
+  /// The currently active transition for this light (transition/flash).
+  std::unique_ptr<LightTransition> transition_{nullptr};
   /// Whether the light value should be written in the next cycle.
   bool next_write_{true};
 

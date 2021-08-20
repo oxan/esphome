@@ -1,7 +1,6 @@
 #include "esphome/core/log.h"
 #include "light_state.h"
 #include "light_output.h"
-#include "transformers.h"
 
 namespace esphome {
 namespace light {
@@ -111,20 +110,20 @@ void LightState::loop() {
     effect->apply();
   }
 
-  // Apply transformer (if any)
-  if (this->transformer_ != nullptr) {
+  // Apply transition (if any)
+  if (this->transition_ != nullptr) {
     // check for completion first, so that apply() is called at least once in completed state
-    bool completed = this->transformer_->is_completed();
+    bool completed = this->transition_->is_completed();
 
-    auto values = this->transformer_->apply();
-    this->next_write_ = values.has_value();  // don't write if transformer doesn't want us to
+    auto values = this->transition_->apply();
+    this->next_write_ = values.has_value();  // don't write if transition doesn't want us to
     if (values.has_value())
       this->current_values = *values;
 
     if (completed) {
-      this->transformer_->finish();
-      this->transformer_ = nullptr;
-      // if transformer has written directly to output, current_values is outdated, so update it
+      this->transition_->finish();
+      this->transition_ = nullptr;
+      // if transition has written directly to output, current_values is outdated, so update it
       this->current_values = this->remote_values;
       this->target_state_reached_callback_.call();
     }
@@ -205,9 +204,9 @@ void LightState::current_values_as_ct(float *color_temperature, float *white_bri
 
 void LightState::stop_active_() {
   this->stop_effect_();
-  if (this->transformer_ != nullptr)
-    this->transformer_->abort();
-  this->transformer_ = nullptr;
+  if (this->transition_ != nullptr)
+    this->transition_->abort();
+  this->transition_ = nullptr;
   this->cancel_timeout("flash");
 }
 
@@ -236,8 +235,8 @@ void LightState::stop_effect_() {
 
 void LightState::start_transition_(const LightColorValues &target, uint32_t length) {
   this->stop_active_();
-  this->transformer_ = this->output_->create_default_transition();
-  this->transformer_->setup(this->current_values, target, length);
+  this->transition_ = this->output_->create_default_transition();
+  this->transition_->setup(this->current_values, target, length);
   this->remote_values = target;
 }
 
