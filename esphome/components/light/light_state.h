@@ -142,6 +142,9 @@ class LightState : public Nameable, public Component {
 
   uint32_t hash_base() override;
 
+  /// Internal method to stop any active transitions, flashes and effects.
+  void stop_active_();
+
   /// Internal method to start an effect with the given index
   void start_effect_(uint32_t effect_index);
   /// Internal method to get the currently active effect

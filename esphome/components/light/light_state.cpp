@@ -140,10 +140,7 @@ void LightState::loop() {
 float LightState::get_setup_priority() const { return setup_priority::HARDWARE - 1.0f; }
 uint32_t LightState::hash_base() { return 1114400283; }
 
-void LightState::publish_state() {
-  this->remote_values_callback_.call();
-  this->next_write_ = true;
-}
+void LightState::publish_state() { this->remote_values_callback_.call(); }
 
 LightOutput *LightState::get_output() const { return this->output_; }
 std::string LightState::get_effect_name() {
@@ -206,6 +203,14 @@ void LightState::current_values_as_ct(float *color_temperature, float *white_bri
                              this->gamma_correct_);
 }
 
+void LightState::stop_active_() {
+  this->stop_effect_();
+  if (this->transformer_ != nullptr)
+    this->transformer_->abort();
+  this->transformer_ = nullptr;
+  this->cancel_timeout("flash");
+}
+
 void LightState::start_effect_(uint32_t effect_index) {
   this->stop_effect_();
   if (effect_index == 0)
@@ -230,31 +235,34 @@ void LightState::stop_effect_() {
 }
 
 void LightState::start_transition_(const LightColorValues &target, uint32_t length) {
-  if (this->transformer_ != nullptr)
-    this->transformer_->abort();
+  this->stop_active_();
   this->transformer_ = this->output_->create_default_transition();
   this->transformer_->setup(this->current_values, target, length);
   this->remote_values = target;
 }
 
 void LightState::start_flash_(const LightColorValues &target, uint32_t length) {
-  LightColorValues end_colors = this->remote_values;
-  // If starting a flash if one is already happening, set end values to end values of current flash
-  // Hacky but works
-  if (this->transformer_ != nullptr)
-    end_colors = this->transformer_->get_target_values();
+  this->stop_active_();
 
-  if (this->transformer_ != nullptr)
-    this->transformer_->abort();
-  this->transformer_ = make_unique<LightFlashTransformer>(*this);
-  this->transformer_->setup(end_colors, target, length);
+  // XXX this breaks if starting a flash while one is already happening
+  LightColorValues end_colors = this->remote_values;
+
+  this->current_values = target;
   this->remote_values = target;
+  this->next_write_ = true;
+
+  this->set_timeout("flash", length, [=]() {
+    this->make_call()
+        .from_light_color_values(end_colors)
+        .set_publish(true)
+        .set_save(false)
+        .set_transition_length(0)
+        .perform();
+  });
 }
 
 void LightState::set_immediately_(const LightColorValues &target, bool set_remote_values) {
-  if (this->transformer_ != nullptr)
-    this->transformer_->abort();
-  this->transformer_ = nullptr;
+  this->stop_active_();
   this->current_values = target;
   if (set_remote_values) {
     this->remote_values = target;
