@@ -19,6 +19,8 @@ namespace light {
 
 using ESPColor ESPDEPRECATED("esphome::light::ESPColor is deprecated, use esphome::Color instead.", "v1.21") = Color;
 
+Color esp_color_from_light_color_values(LightColorValues val);
+
 class AddressableLight : public LightOutput, public Component {
  public:
   virtual int32_t size() const = 0;
@@ -96,20 +98,6 @@ class AddressableLight : public LightOutput, public Component {
   power_supply::PowerSupplyRequester power_;
 #endif
   LightState *state_parent_{nullptr};
-};
-
-class AddressableFadeTransition : public FadeTransition {
- public:
-  AddressableFadeTransition(AddressableLight &light) : light_(light) {}
-
-  void start() override;
-  optional<LightColorValues> apply() override;
-
- protected:
-  AddressableLight &light_;
-  Color target_color_{};
-  float last_transition_progress_{0.0f};
-  float accumulated_alpha_{0.0f};
 };
 
 }  // namespace light
