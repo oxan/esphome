@@ -2,8 +2,15 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 
 from esphome.util import Registry
-from esphome.const import CONF_NAME
-from .types import AddressableLight, FadeTransition, AddressableFadeTransition
+from esphome.const import CONF_NAME, CONF_LAMBDA, CONF_UPDATE_INTERVAL
+from .types import (
+    AddressableLight,
+    LightColorValues,
+    FadeTransition,
+    LambdaTransition,
+    AddressableFadeTransition,
+    AddressableLambdaTransition,
+)
 
 OUTPUT_TRANSITIONS = {}
 
@@ -36,11 +43,61 @@ async def fade_transition_to_code(config, transition_id):
     return cg.new_Pvariable(transition_id, config[CONF_NAME])
 
 
+@register_generic_transition(
+    "lambda",
+    LambdaTransition,
+    "Lambda",
+    {
+        cv.Required(CONF_LAMBDA): cv.lambda_,
+        cv.Optional(CONF_UPDATE_INTERVAL, default="0ms"): cv.update_interval,
+    },
+)
+async def lambda_transition_to_code(config, transition_id):
+    lambda_ = await cg.process_lambda(
+        config[CONF_LAMBDA],
+        [
+            (LightColorValues.operator("constref"), "start"),
+            (LightColorValues.operator("constref"), "target"),
+            (float, "x"),
+        ],
+        return_type=cg.optional.template(LightColorValues),
+    )
+    return cg.new_Pvariable(
+        transition_id, config[CONF_NAME], config[CONF_UPDATE_INTERVAL], lambda_
+    )
+
+
 @register_output_transition(
     AddressableLight, "addressable_fade", AddressableFadeTransition, "Fade", {}
 )
 async def addressable_fade_transition_to_code(config, transition_id):
     return cg.new_Pvariable(transition_id, config[CONF_NAME])
+
+
+@register_output_transition(
+    AddressableLight,
+    "addressable_lambda",
+    AddressableLambdaTransition,
+    "Lambda",
+    {
+        cv.Required(CONF_LAMBDA): cv.lambda_,
+        cv.Optional(CONF_UPDATE_INTERVAL, default="0ms"): cv.update_interval,
+    },
+)
+async def addressable_lambda_transition_to_code(config, transition_id):
+    lambda_ = await cg.process_lambda(
+        config[CONF_LAMBDA],
+        [
+            (AddressableLight.operator("ref"), "output"),
+            (LightColorValues.operator("constref"), "start"),
+            (LightColorValues.operator("constref"), "target"),
+            (float, "x"),
+        ],
+        return_type=cg.optional.template(LightColorValues),
+    )
+    return cg.new_Pvariable(
+        transition_id, config[CONF_NAME], config[CONF_UPDATE_INTERVAL], lambda_
+    )
 
 
 def validate_transitions(light_type=None):

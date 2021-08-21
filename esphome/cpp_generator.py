@@ -736,11 +736,13 @@ class MockObj(Expression):
     def operator(self, name: str) -> "MockObj":
         if name == "ref":
             return MockObj(f"{self.base} &", "")
+        if name == "constref":
+            return MockObj(f"const {self.base} &", "")
         if name == "ptr":
             return MockObj(f"{self.base} *", "")
         if name == "const":
             return MockObj(f"const {self.base}", "")
-        raise ValueError("Expected one of ref, ptr, const.")
+        raise ValueError("Expected one of ref, constref, ptr, const.")
 
     @property
     def using(self) -> "MockObj":

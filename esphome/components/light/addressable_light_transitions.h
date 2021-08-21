@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include "addressable_light.h"
 #include "light_transition.h"
 
@@ -68,6 +69,30 @@ class AddressableFadeTransition : public AddressableLightTransition {
   Color target_color_{};
   float last_transition_progress_{0.0f};
   float accumulated_alpha_{0.0f};
+};
+
+class AddressableLambdaTransition : public AddressableLightTransition {
+ public:
+  using lambda_t = std::function<optional<LightColorValues>(AddressableLight &, const LightColorValues &,
+                                                            const LightColorValues &, float)>;
+
+  AddressableLambdaTransition(const std::string &name, uint32_t update_interval, lambda_t f)
+      : AddressableLightTransition(name), f_(std::move(f)), update_interval_(update_interval) {}
+
+  optional<LightColorValues> apply() override {
+    const uint32_t now = millis();
+    if (now - this->last_run_ >= this->update_interval_) {
+      this->last_run_ = now;
+      return this->f_(this->get_addressable_(), this->get_start_values(), this->get_target_values(),
+                      this->get_progress_());
+    }
+    return {};
+  }
+
+ protected:
+  lambda_t f_;
+  uint32_t update_interval_;
+  uint32_t last_run_{0};
 };
 
 }  // namespace light

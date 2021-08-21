@@ -80,9 +80,13 @@ AddressableFlickerEffect = light_ns.class_(
 # Transitions
 LightTransition = light_ns.class_("LightTransition")
 FadeTransition = light_ns.class_("FadeTransition", LightTransition)
+LambdaTransition = light_ns.class_("LambdaTransition", LightTransition)
 AddressableLightTransition = light_ns.class_(
     "AddressableLightTransition", LightTransition
 )
 AddressableFadeTransition = light_ns.class_(
     "AddressableFadeTransition", AddressableLightTransition
+)
+AddressableLambdaTransition = light_ns.class_(
+    "AddressableLambdaTransition", AddressableLightTransition
 )

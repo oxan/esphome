@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include "esphome/core/component.h"
 #include "esphome/core/helpers.h"
 #include "light_color_values.h"
@@ -60,6 +61,28 @@ class FadeTransition : public LightTransition {
 
   bool changing_color_mode_{false};
   LightColorValues intermediate_values_{};
+};
+
+class LambdaTransition : public LightTransition {
+ public:
+  using lambda_t = std::function<optional<LightColorValues>(const LightColorValues &, const LightColorValues &, float)>;
+
+  LambdaTransition(const std::string &name, uint32_t update_interval, lambda_t f)
+      : LightTransition(name), f_(std::move(f)), update_interval_(update_interval) {}
+
+  optional<LightColorValues> apply() override {
+    const uint32_t now = millis();
+    if (now - this->last_run_ >= this->update_interval_) {
+      this->last_run_ = now;
+      return this->f_(this->get_start_values(), this->get_target_values(), this->get_progress_());
+    }
+    return {};
+  }
+
+ protected:
+  lambda_t f_;
+  uint32_t update_interval_;
+  uint32_t last_run_{0};
 };
 
 }  // namespace light
