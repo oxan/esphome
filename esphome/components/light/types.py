@@ -76,3 +76,13 @@ AddressableFireworksEffect = light_ns.class_(
 AddressableFlickerEffect = light_ns.class_(
     "AddressableFlickerEffect", AddressableLightEffect
 )
+
+# Transitions
+LightTransition = light_ns.class_("LightTransition")
+FadeTransition = light_ns.class_("FadeTransition", LightTransition)
+AddressableLightTransition = light_ns.class_(
+    "AddressableLightTransition", LightTransition
+)
+AddressableFadeTransition = light_ns.class_(
+    "AddressableFadeTransition", AddressableLightTransition
+)

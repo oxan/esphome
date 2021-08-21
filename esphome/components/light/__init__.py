@@ -16,6 +16,7 @@ from esphome.const import (
     CONF_RESTORE_MODE,
     CONF_ON_TURN_OFF,
     CONF_ON_TURN_ON,
+    CONF_TRANSITIONS,
     CONF_TRIGGER_ID,
     CONF_COLD_WHITE_COLOR_TEMPERATURE,
     CONF_WARM_WHITE_COLOR_TEMPERATURE,
@@ -30,6 +31,10 @@ from .effects import (
     ADDRESSABLE_EFFECTS,
     EFFECTS_REGISTRY,
 )
+from .transitions import (
+    validate_transitions,
+    TRANSITIONS_REGISTRY,
+)
 from .types import (  # noqa
     LightState,
     AddressableLightState,
@@ -38,6 +43,7 @@ from .types import (  # noqa
     AddressableLight,
     LightTurnOnTrigger,
     LightTurnOffTrigger,
+    LightTransition,
 )
 
 CODEOWNERS = ["@esphome/core"]
@@ -85,6 +91,7 @@ BRIGHTNESS_ONLY_LIGHT_SCHEMA = LIGHT_SCHEMA.extend(
         cv.Optional(
             CONF_DEFAULT_TRANSITION_LENGTH, default="1s"
         ): cv.positive_time_period_milliseconds,
+        cv.Optional(CONF_TRANSITIONS, default=["fade"]): validate_transitions(),
         cv.Optional(CONF_EFFECTS): validate_effects(MONOCHROMATIC_EFFECTS),
     }
 )
@@ -98,7 +105,9 @@ RGB_LIGHT_SCHEMA = BRIGHTNESS_ONLY_LIGHT_SCHEMA.extend(
 ADDRESSABLE_LIGHT_SCHEMA = RGB_LIGHT_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(AddressableLightState),
-        cv.Optional(CONF_EFFECTS): validate_effects(ADDRESSABLE_EFFECTS),
+        cv.Optional(
+            CONF_TRANSITIONS, default=["addressable_fade"]
+        ): validate_transitions(AddressableLight),
         cv.Optional(CONF_COLOR_CORRECT): cv.All(
             [cv.percentage], cv.Length(min=3, max=4)
         ),
@@ -132,6 +141,11 @@ async def setup_light_core_(light_var, output_var, config):
                 config[CONF_DEFAULT_TRANSITION_LENGTH]
             )
         )
+    transitions = await cg.build_registry_list(
+        TRANSITIONS_REGISTRY, config.get(CONF_TRANSITIONS, [])
+    )
+    cg.add(light_var.add_transitions(transitions))
+
     if CONF_GAMMA_CORRECT in config:
         cg.add(light_var.set_gamma_correct(config[CONF_GAMMA_CORRECT]))
     effects = await cg.build_registry_list(
