@@ -564,6 +564,21 @@ def has_at_most_one_key(*keys):
     return validate
 
 
+def has_at_most_one_group(*groups):
+    """Validate that at most one of the groups of given keys exist in the config."""
+
+    def validate(obj):
+        if not isinstance(obj, dict):
+            raise Invalid("expected dictionary")
+
+        indices = [index for index, keys in enumerate(groups) for k in obj if k in keys]
+        if len(set(indices)) > 1:
+            raise Invalid("Cannot specify more than one group of {}.".format(", ".join(groups)))
+        return obj
+
+    return validate
+
+
 def has_none_or_all_keys(*keys):
     """Validate that none or all of the given keys exist in the config."""
 

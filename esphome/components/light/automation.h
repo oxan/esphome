@@ -29,6 +29,7 @@ template<typename... Ts> class LightControlAction : public Action<Ts...> {
 
   TEMPLATABLE_VALUE(ColorMode, color_mode)
   TEMPLATABLE_VALUE(bool, state)
+  TEMPLATABLE_VALUE(std::string, transition)
   TEMPLATABLE_VALUE(uint32_t, transition_length)
   TEMPLATABLE_VALUE(uint32_t, flash_length)
   TEMPLATABLE_VALUE(float, brightness)
@@ -57,6 +58,7 @@ template<typename... Ts> class LightControlAction : public Action<Ts...> {
     call.set_warm_white(this->warm_white_.optional_value(x...));
     call.set_effect(this->effect_.optional_value(x...));
     call.set_flash_length(this->flash_length_.optional_value(x...));
+    call.set_transition(this->transition_.optional_value(x...));
     call.set_transition_length(this->transition_length_.optional_value(x...));
     call.perform();
   }

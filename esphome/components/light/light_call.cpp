@@ -84,7 +84,9 @@ void LightCall::perform() {
   } else if (this->has_transition_()) {
     // TRANSITION
     if (this->publish_) {
-      ESP_LOGD(TAG, "  Transition length: %.1fs", *this->transition_length_ / 1e3f);
+      ESP_LOGD(TAG, "  Transition: '%s' (%.1fs)",
+               this->parent_->transitions_[*this->transition_ - 1]->get_name().c_str(),
+               *this->transition_length_ / 1e3f);
     }
 
     // Special case: Transition and effect can be set when turning off
@@ -95,7 +97,7 @@ void LightCall::perform() {
       this->parent_->stop_effect_();
     }
 
-    this->parent_->start_transition_(v, 1, *this->transition_length_);
+    this->parent_->start_transition_(v, *this->transition_, *this->transition_length_);
 
   } else if (this->has_effect_()) {
     // EFFECT
@@ -157,11 +159,14 @@ LightColorValues LightCall::validate_() {
     this->brightness_.reset();
   }
 
-  // Transition length possible check
-  if (this->transition_length_.has_value() && *this->transition_length_ != 0 &&
-      !(color_mode & ColorCapability::BRIGHTNESS)) {
-    ESP_LOGW(TAG, "'%s' - This light does not support transitions!", name);
-    this->transition_length_.reset();
+  // Transition possible check
+  if ((this->transition_length_.has_value() && *this->transition_length_ != 0) ||
+      (this->transition_.has_value() && *this->transition_ != 0)) {
+    if (!(color_mode & ColorCapability::BRIGHTNESS)) {
+      ESP_LOGW(TAG, "'%s' - This light does not support transitions!", name);
+      this->transition_.reset();
+      this->transition_length_.reset();
+    }
   }
 
   // Color brightness exists check
@@ -275,7 +280,7 @@ LightColorValues LightCall::validate_() {
   }
 
   // validate transition length/flash length/effect not used at the same time
-  bool supports_transition = color_mode & ColorCapability::BRIGHTNESS;
+  bool supports_transition = color_mode & ColorCapability::BRIGHTNESS && !this->parent_->transitions_.empty();
 
   // If effect is already active, remove effect start
   if (this->has_effect_() && *this->effect_ == this->parent_->active_effect_index_) {
@@ -290,28 +295,42 @@ LightColorValues LightCall::validate_() {
 
   if (this->has_effect_() && (this->has_transition_() || this->has_flash_())) {
     ESP_LOGW(TAG, "'%s' - Effect cannot be used together with transition/flash!", name);
+    this->transition_.reset();
     this->transition_length_.reset();
     this->flash_length_.reset();
   }
 
   if (this->has_flash_() && this->has_transition_()) {
     ESP_LOGW(TAG, "'%s' - Flash cannot be used together with transition!", name);
+    this->transition_.reset();
     this->transition_length_.reset();
+  }
+
+  if (this->has_transition_() && !this->transition_.has_value()) {
+    this->transition_ = 1;
   }
 
   if (!this->has_transition_() && !this->has_flash_() && (!this->has_effect_() || *this->effect_ == 0) &&
       supports_transition) {
-    // nothing specified and light supports transitions, set default transition length
+    // nothing specified and light supports transitions, set default transition & length
+    this->transition_ = 1;
     this->transition_length_ = this->parent_->default_transition_length_;
   }
 
-  if (this->transition_length_.value_or(0) == 0) {
+  if (this->transition_length_.value_or(0) == 0 || this->transition_.value_or(0) == 0) {
     // 0 transition is interpreted as no transition (instant change)
+    this->transition_.reset();
     this->transition_length_.reset();
+  }
+
+  if (this->has_transition_() && *this->transition_ > this->parent_->transitions_.size()) {
+    ESP_LOGW(TAG, "'%s' - Invalid transition index %u!", name, *this->transition_);
+    this->transition_.reset();
   }
 
   if (this->has_transition_() && !supports_transition) {
     ESP_LOGW(TAG, "'%s' - Light does not support transitions!", name);
+    this->transition_.reset();
     this->transition_length_.reset();
   }
 
@@ -498,6 +517,11 @@ LightCall &LightCall::set_transition_length_if_supported(uint32_t transition_len
     this->set_transition_length(transition_length);
   return *this;
 }
+LightCall &LightCall::set_transition_if_supported(const std::string &transition) {
+  if (this->get_active_color_mode_() & ColorCapability::BRIGHTNESS)
+    this->set_transition(transition);
+  return *this;
+}
 LightCall &LightCall::set_brightness_if_supported(float brightness) {
   if (this->get_active_color_mode_() & ColorCapability::BRIGHTNESS)
     this->set_brightness(brightness);
@@ -562,6 +586,22 @@ LightCall &LightCall::set_transition_length(optional<uint32_t> transition_length
 }
 LightCall &LightCall::set_transition_length(uint32_t transition_length) {
   this->transition_length_ = transition_length;
+  return *this;
+}
+LightCall &LightCall::set_transition(optional<std::string> transition) {
+  if (transition.has_value())
+    this->set_transition(transition.value());
+  return *this;
+}
+LightCall &LightCall::set_transition(const std::string &transition) {
+  for (uint32_t i = 0; i < this->parent_->transitions_.size(); i++) {
+    if (this->parent_->transitions_[i]->get_name() == transition) {
+      this->transition_ = i + 1;
+      return *this;
+    }
+  }
+
+  ESP_LOGW(TAG, "'%s' - No such transition '%s'!", this->parent_->get_name().c_str(), transition.c_str());
   return *this;
 }
 LightCall &LightCall::set_flash_length(optional<uint32_t> flash_length) {

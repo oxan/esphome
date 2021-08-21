@@ -35,6 +35,12 @@ class LightCall {
   LightCall &set_transition_length(uint32_t transition_length);
   /// Set the transition length property if the light supports transitions.
   LightCall &set_transition_length_if_supported(uint32_t transition_length);
+  /// Set the transition of the light by its name.
+  LightCall &set_transition(optional<std::string> transition);
+  /// Set the transition of the light by its name.
+  LightCall &set_transition(const std::string &transition);
+  /// Set the transition of the light by its name, if the light supports transitions.
+  LightCall &set_transition_if_supported(const std::string &transition);
   /// Start and set the flash length of this call in milliseconds.
   LightCall &set_flash_length(optional<uint32_t> flash_length);
   /// Start and set the flash length of this call in milliseconds.
@@ -170,13 +176,14 @@ class LightCall {
   /// Some color modes also can be set using non-native parameters, transform those calls.
   void transform_parameters_();
 
-  bool has_transition_() { return this->transition_length_.has_value(); }
+  bool has_transition_() { return this->transition_length_.has_value() || this->transition_.has_value(); }
   bool has_flash_() { return this->flash_length_.has_value(); }
   bool has_effect_() { return this->effect_.has_value(); }
 
   LightState *parent_;
   optional<bool> state_;
   optional<uint32_t> transition_length_;
+  optional<uint32_t> transition_;
   optional<uint32_t> flash_length_;
   optional<ColorMode> color_mode_;
   optional<float> brightness_;

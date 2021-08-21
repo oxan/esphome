@@ -4,6 +4,7 @@ from esphome import automation
 from esphome.const import (
     CONF_ID,
     CONF_COLOR_MODE,
+    CONF_TRANSITION,
     CONF_TRANSITION_LENGTH,
     CONF_STATE,
     CONF_FLASH_LENGTH,
@@ -43,6 +44,7 @@ from .types import (
             cv.Optional(CONF_TRANSITION_LENGTH): cv.templatable(
                 cv.positive_time_period_milliseconds
             ),
+            cv.Optional(CONF_TRANSITION): cv.templatable(cv.string),
         }
     ),
 )
@@ -54,6 +56,9 @@ async def light_toggle_to_code(config, action_id, template_arg, args):
             config[CONF_TRANSITION_LENGTH], args, cg.uint32
         )
         cg.add(var.set_transition_length(template_))
+    if CONF_TRANSITION in config:
+        template_ = await cg.templatable(config[CONF_EFFECT], args, cg.std_string)
+        cg.add(var.set_transition(template_))
     return var
 
 
@@ -62,13 +67,14 @@ LIGHT_CONTROL_ACTION_SCHEMA = cv.Schema(
         cv.Required(CONF_ID): cv.use_id(LightState),
         cv.Optional(CONF_COLOR_MODE): cv.enum(COLOR_MODES, upper=True, space="_"),
         cv.Optional(CONF_STATE): cv.templatable(cv.boolean),
-        cv.Exclusive(CONF_TRANSITION_LENGTH, "transformer"): cv.templatable(
+        cv.Optional(CONF_TRANSITION_LENGTH): cv.templatable(
             cv.positive_time_period_milliseconds
         ),
-        cv.Exclusive(CONF_FLASH_LENGTH, "transformer"): cv.templatable(
+        cv.Optional(CONF_TRANSITION): cv.templatable(cv.string),
+        cv.Optional(CONF_FLASH_LENGTH): cv.templatable(
             cv.positive_time_period_milliseconds
         ),
-        cv.Exclusive(CONF_EFFECT, "transformer"): cv.templatable(cv.string),
+        cv.Optional(CONF_EFFECT): cv.templatable(cv.string),
         cv.Optional(CONF_BRIGHTNESS): cv.templatable(cv.percentage),
         cv.Optional(CONF_COLOR_BRIGHTNESS): cv.templatable(cv.percentage),
         cv.Optional(CONF_RED): cv.templatable(cv.percentage),
@@ -78,7 +84,10 @@ LIGHT_CONTROL_ACTION_SCHEMA = cv.Schema(
         cv.Optional(CONF_COLOR_TEMPERATURE): cv.templatable(cv.color_temperature),
         cv.Optional(CONF_COLD_WHITE): cv.templatable(cv.percentage),
         cv.Optional(CONF_WARM_WHITE): cv.templatable(cv.percentage),
-    }
+    },
+    cv.has_at_most_one_group(
+        [CONF_TRANSITION, CONF_TRANSITION_LENGTH], [CONF_FLASH_LENGTH], [CONF_EFFECT]
+    ),
 )
 LIGHT_TURN_OFF_ACTION_SCHEMA = automation.maybe_simple_id(
     {
@@ -121,6 +130,9 @@ async def light_control_to_code(config, action_id, template_arg, args):
             config[CONF_TRANSITION_LENGTH], args, cg.uint32
         )
         cg.add(var.set_transition_length(template_))
+    if CONF_TRANSITION in config:
+        template_ = await cg.templatable(config[CONF_TRANSITION], args, cg.std_string)
+        cg.add(var.set_transition(template_))
     if CONF_FLASH_LENGTH in config:
         template_ = await cg.templatable(config[CONF_FLASH_LENGTH], args, cg.uint32)
         cg.add(var.set_flash_length(template_))
