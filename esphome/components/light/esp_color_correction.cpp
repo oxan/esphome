@@ -1,6 +1,5 @@
 #include "esp_color_correction.h"
-#include "light_color_values.h"
-#include "esphome/core/log.h"
+#include "addressable_light.h"
 
 namespace esphome {
 namespace light {

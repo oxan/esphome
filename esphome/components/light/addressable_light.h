@@ -13,6 +13,13 @@
 namespace esphome {
 namespace light {
 
+inline static uint8_t to_uint8_scale(float x) { return static_cast<uint8_t>(roundf(x * 255.0f)); }
+inline static Color color_from_light_values(LightColorValues val) {
+  return Color(to_uint8_scale(val.get_color_brightness() * val.get_red()),
+               to_uint8_scale(val.get_color_brightness() * val.get_green()),
+               to_uint8_scale(val.get_color_brightness() * val.get_blue()), to_uint8_scale(val.get_white()));
+}
+
 class AddressableLight : public LightOutput, public Component {
  public:
   void call_setup() override;

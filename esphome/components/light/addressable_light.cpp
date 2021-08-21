@@ -27,14 +27,6 @@ std::unique_ptr<LightTransformer> AddressableLight::create_default_transition() 
   return make_unique<AddressableLightTransformer>(*this);
 }
 
-Color esp_color_from_light_color_values(LightColorValues val) {
-  auto r = to_uint8_scale(val.get_color_brightness() * val.get_red());
-  auto g = to_uint8_scale(val.get_color_brightness() * val.get_green());
-  auto b = to_uint8_scale(val.get_color_brightness() * val.get_blue());
-  auto w = to_uint8_scale(val.get_white());
-  return Color(r, g, b, w);
-}
-
 void AddressableLight::setup_state(LightState *state) {
   this->correction_.set_gamma_correction(state->get_gamma_correct());
   this->state_parent_ = state;
@@ -48,7 +40,7 @@ void AddressableLight::update_state(LightState *state) {
     return;
 
   // don't use LightState helper, gamma correction+brightness is handled by ESPRangeView
-  this->pixels() = esp_color_from_light_color_values(state->current_values);
+  this->pixels() = color_from_light_values(state->current_values);
   this->schedule_show();
 }
 
@@ -58,7 +50,7 @@ void AddressableLightTransformer::start() {
     return;
 
   auto end_values = this->target_values_;
-  this->target_color_ = esp_color_from_light_color_values(end_values);
+  this->target_color_ = color_from_light_values(end_values);
   this->target_color_ *= to_uint8_scale(end_values.get_brightness() * end_values.get_state());
 }
 
