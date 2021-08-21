@@ -26,7 +26,7 @@ void AddressableLight::call_setup() {
 }
 
 std::unique_ptr<LightTransition> AddressableLight::create_default_transition() {
-  return make_unique<AddressableFadeTransition>(*this);
+  return make_unique<AddressableFadeTransition>();
 }
 
 Color esp_color_from_light_color_values(LightColorValues val) {

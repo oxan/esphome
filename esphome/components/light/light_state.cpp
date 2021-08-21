@@ -236,7 +236,7 @@ void LightState::stop_effect_() {
 void LightState::start_transition_(const LightColorValues &target, uint32_t length) {
   this->stop_active_();
   this->transition_ = this->output_->create_default_transition();
-  this->transition_->setup(this->current_values, target, length);
+  this->transition_->setup(this, this->current_values, target, length);
   this->remote_values = target;
 }
 

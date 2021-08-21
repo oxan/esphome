@@ -6,10 +6,14 @@
 namespace esphome {
 namespace light {
 
+class LightState;
+
 /// Base class for light transitions.
 class LightTransition {
  public:
-  void setup(const LightColorValues &start_values, const LightColorValues &target_values, uint32_t length) {
+  void setup(LightState *state, const LightColorValues &start_values, const LightColorValues &target_values,
+             uint32_t length) {
+    this->state_ = state;
     this->start_time_ = millis();
     this->length_ = length;
     this->start_values_ = start_values;
@@ -45,6 +49,7 @@ class LightTransition {
   uint32_t length_;
   LightColorValues start_values_;
   LightColorValues target_values_;
+  LightState *state_{nullptr};
 };
 
 }  // namespace light
