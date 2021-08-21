@@ -49,12 +49,10 @@ void AddressableLight::write_state(LightState *state) {
 }
 
 void AddressableLightTransformer::start() {
-  auto end_values = this->target_values_;
-  this->target_color_ = esp_color_from_light_color_values(end_values);
-
   // our transition will handle brightness, disable brightness in correction.
   this->light_.correction_.set_local_brightness(255);
-  this->target_color_ *= end_values.is_on() ? to_uint8_scale(end_values.get_brightness()) : 0;
+  this->target_color_ = esp_color_from_light_color_values(this->target_values_);
+  this->target_color_ *= this->target_values_.is_on() ? to_uint8_scale(this->target_values_.get_brightness()) : 0;
 }
 
 optional<LightColorValues> AddressableLightTransformer::apply() {
@@ -65,29 +63,19 @@ optional<LightColorValues> AddressableLightTransformer::apply() {
 
   // Use a specialized transition for addressable lights: instead of using a unified transition for
   // all LEDs, we use the current state of each LED as the start.
-
+  //
   // We can't use a direct lerp smoothing here though - that would require creating a copy of the original
   // state of each LED at the start of the transition.
   // Instead, we "fake" the look of the LERP by using an exponential average over time and using
   // dynamically-calculated alpha values to match the look.
-
   float smoothed_progress = LightTransitionTransformer::smoothed_progress(this->get_progress_());
-
   float denom = (1.0f - smoothed_progress);
   float alpha = denom == 0.0f ? 0.0f : (smoothed_progress - this->last_transition_progress_) / denom;
 
   // We need to use a low-resolution alpha here which makes the transition set in only after ~half of the length
   // We solve this by accumulating the fractional part of the alpha over time.
-  float alpha255 = alpha * 255.0f;
-  float alpha255int = floorf(alpha255);
-  float alpha255remainder = alpha255 - alpha255int;
-
-  this->accumulated_alpha_ += alpha255remainder;
-  float alpha_add = floorf(this->accumulated_alpha_);
-  this->accumulated_alpha_ -= alpha_add;
-
-  alpha255 += alpha_add;
-  alpha255 = clamp(alpha255, 0.0f, 255.0f);
+  float alpha255;
+  this->accumulated_alpha_ = modff(alpha * 255.0f + this->accumulated_alpha_, &alpha255);
   auto alpha8 = static_cast<uint8_t>(alpha255);
 
   if (alpha8 != 0) {
