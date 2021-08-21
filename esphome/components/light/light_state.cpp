@@ -113,14 +113,19 @@ void LightState::loop() {
 
   // Apply transformer (if any)
   if (this->transformer_ != nullptr) {
+    // check for completion first, so that apply() is called at least once in completed state
+    bool completed = this->transformer_->is_finished();
+
     auto values = this->transformer_->apply();
     this->next_write_ = values.has_value();  // don't write if transformer doesn't want us to
     if (values.has_value())
       this->current_values = *values;
 
-    if (this->transformer_->is_finished()) {
+    if (completed) {
       this->transformer_->stop();
       this->transformer_ = nullptr;
+      // if transformer has written directly to output, current_values is outdated, so update it
+      this->current_values = this->remote_values;
       this->target_state_reached_callback_.call();
     }
   }
