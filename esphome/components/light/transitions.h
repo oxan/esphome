@@ -32,6 +32,8 @@ class FadeTransition : public LightTransition {
       this->changing_color_mode_ = true;
       this->intermediate_values_ = this->start_values_;
       this->intermediate_values_.set_state(false);
+    } else {
+      this->changing_color_mode_ = false;
     }
   }
 
