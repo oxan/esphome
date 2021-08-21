@@ -99,6 +99,10 @@ class LightState : public Nameable, public Component {
 
   /// Set the default transition length, i.e. the transition length when no transition is provided.
   void set_default_transition_length(uint32_t default_transition_length);
+  /// Add transitions for this light.
+  void add_transitions(const std::vector<LightTransition *> &transitions);
+  /// Get all transitions for this light.
+  const std::vector<LightTransition *> &get_transitions() const;
 
   /// Set the gamma correction factor
   void set_gamma_correct(float gamma_correct);
@@ -151,8 +155,9 @@ class LightState : public Nameable, public Component {
   LightEffect *get_active_effect_();
   /// Internal method to stop the current effect (if one is active).
   void stop_effect_();
+
   /// Internal method to start a transition to the target color with the given length.
-  void start_transition_(const LightColorValues &target, uint32_t length);
+  void start_transition_(const LightColorValues &target, uint32_t transition_number, uint32_t length);
 
   /// Internal method to start a flash for the specified amount of time.
   void start_flash_(const LightColorValues &target, uint32_t length);
@@ -167,8 +172,8 @@ class LightState : public Nameable, public Component {
   LightOutput *output_;
   /// Value for storing the index of the currently active effect. 0 if no effect is active
   uint32_t active_effect_index_{};
-  /// The currently active transition for this light (transition/flash).
-  std::unique_ptr<LightTransition> transition_{nullptr};
+  /// The index + 1 of the currently active transition for this light. Zero if no transition is active.
+  uint32_t active_transition_number_{};
   /// Whether the light value should be written in the next cycle.
   bool next_write_{true};
 
@@ -191,6 +196,8 @@ class LightState : public Nameable, public Component {
 
   /// Default transition length for all transitions in ms.
   uint32_t default_transition_length_{};
+  /// List of transitions for this light.
+  std::vector<LightTransition *> transitions_;
   /// Gamma correction factor for the light.
   float gamma_correct_{};
   /// Restore mode of the light.

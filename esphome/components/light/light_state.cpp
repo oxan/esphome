@@ -111,18 +111,19 @@ void LightState::loop() {
   }
 
   // Apply transition (if any)
-  if (this->transition_ != nullptr) {
+  if (this->active_transition_number_ != 0) {
+    auto transition = this->transitions_[this->active_transition_number_ - 1];
     // check for completion first, so that apply() is called at least once in completed state
-    bool completed = this->transition_->is_completed();
+    bool completed = transition->is_completed();
 
-    auto values = this->transition_->apply();
+    auto values = transition->apply();
     this->next_write_ = values.has_value();  // don't write if transition doesn't want us to
     if (values.has_value())
       this->current_values = *values;
 
     if (completed) {
-      this->transition_->finish();
-      this->transition_ = nullptr;
+      transition->finish();
+      this->active_transition_number_ = 0;
       // if transition has written directly to output, current_values is outdated, so update it
       this->current_values = this->remote_values;
       this->target_state_reached_callback_.call();
@@ -159,6 +160,12 @@ void LightState::add_new_target_state_reached_callback(std::function<void()> &&s
 void LightState::set_default_transition_length(uint32_t default_transition_length) {
   this->default_transition_length_ = default_transition_length;
 }
+const std::vector<LightTransition *> &LightState::get_transitions() const { return this->transitions_; }
+void LightState::add_transitions(const std::vector<LightTransition *> &transitions) {
+  this->transitions_.reserve(this->transitions_.size() + transitions.size());
+  this->transitions_.insert(this->transitions_.end(), transitions.begin(), transitions.end());
+}
+
 void LightState::set_gamma_correct(float gamma_correct) { this->gamma_correct_ = gamma_correct; }
 void LightState::set_restore_mode(LightRestoreMode restore_mode) { this->restore_mode_ = restore_mode; }
 bool LightState::supports_effects() { return !this->effects_.empty(); }
@@ -204,9 +211,9 @@ void LightState::current_values_as_ct(float *color_temperature, float *white_bri
 
 void LightState::stop_active_() {
   this->stop_effect_();
-  if (this->transition_ != nullptr)
-    this->transition_->abort();
-  this->transition_ = nullptr;
+  if (this->active_transition_number_ != 0)
+    this->transitions_[this->active_transition_number_ - 1]->abort();
+  this->active_transition_number_ = 0;
   this->cancel_timeout("flash");
 }
 
@@ -233,10 +240,10 @@ void LightState::stop_effect_() {
   this->active_effect_index_ = 0;
 }
 
-void LightState::start_transition_(const LightColorValues &target, uint32_t length) {
+void LightState::start_transition_(const LightColorValues &target, uint32_t transition_number, uint32_t length) {
   this->stop_active_();
-  this->transition_ = this->output_->create_default_transition();
-  this->transition_->setup(this, this->current_values, target, length);
+  this->active_transition_number_ = transition_number;
+  this->transitions_[transition_number - 1]->setup(this, this->current_values, target, length);
   this->remote_values = target;
 }
 

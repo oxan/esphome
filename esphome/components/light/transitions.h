@@ -11,6 +11,8 @@ namespace light {
 
 class FadeTransition : public LightTransition {
  public:
+  explicit FadeTransition(const std::string &name) : LightTransition(name) {}
+
   void start() override {
     // When turning light on from off state, use target state and only increase brightness from zero.
     if (!this->start_values_.is_on() && this->target_values_.is_on()) {

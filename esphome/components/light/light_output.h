@@ -3,7 +3,6 @@
 #include "esphome/core/component.h"
 #include "light_traits.h"
 #include "light_state.h"
-#include "light_transition.h"
 
 namespace esphome {
 namespace light {
@@ -13,9 +12,6 @@ class LightOutput {
  public:
   /// Return the LightTraits of this LightOutput.
   virtual LightTraits get_traits() = 0;
-
-  /// Return the default transition used.
-  virtual std::unique_ptr<LightTransition> create_default_transition();
 
   virtual void setup_state(LightState *state) {}
 

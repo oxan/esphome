@@ -95,7 +95,7 @@ void LightCall::perform() {
       this->parent_->stop_effect_();
     }
 
-    this->parent_->start_transition_(v, *this->transition_length_);
+    this->parent_->start_transition_(v, 1, *this->transition_length_);
 
   } else if (this->has_effect_()) {
     // EFFECT

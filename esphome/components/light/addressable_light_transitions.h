@@ -7,12 +7,17 @@ namespace esphome {
 namespace light {
 
 class AddressableLightTransition : public LightTransition {
+ public:
+  explicit AddressableLightTransition(const std::string &name) : LightTransition(name) {}
+
  protected:
   AddressableLight &get_addressable_() const { return *(AddressableLight *) this->state_->get_output(); }
 };
 
 class AddressableFadeTransition : public AddressableLightTransition {
  public:
+  explicit AddressableFadeTransition(const std::string &name) : AddressableLightTransition(name) {}
+
   void start() override {
     // our transition will handle brightness, disable brightness in correction.
     this->get_addressable_().correction_.set_local_brightness(255);

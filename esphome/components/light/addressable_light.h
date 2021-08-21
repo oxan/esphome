@@ -8,7 +8,6 @@
 #include "esp_range_view.h"
 #include "light_output.h"
 #include "light_state.h"
-#include "transitions.h"
 
 #ifdef USE_POWER_SUPPLY
 #include "esphome/components/power_supply/power_supply.h"
@@ -56,7 +55,6 @@ class AddressableLight : public LightOutput, public Component {
   bool is_effect_active() const { return this->effect_active_; }
   void set_effect_active(bool effect_active) { this->effect_active_ = effect_active; }
   void write_state(LightState *state) override;
-  std::unique_ptr<LightTransition> create_default_transition() override;
   void set_correction(float red, float green, float blue, float white = 1.0f) {
     this->correction_.set_max_brightness(
         Color(to_uint8_scale(red), to_uint8_scale(green), to_uint8_scale(blue), to_uint8_scale(white)));

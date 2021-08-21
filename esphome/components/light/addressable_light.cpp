@@ -1,6 +1,5 @@
 #include "addressable_light.h"
 #include "esphome/core/log.h"
-#include "addressable_light_transitions.h"
 
 namespace esphome {
 namespace light {
@@ -23,10 +22,6 @@ void AddressableLight::call_setup() {
     ESP_LOGVV(TAG, " ");
   });
 #endif
-}
-
-std::unique_ptr<LightTransition> AddressableLight::create_default_transition() {
-  return make_unique<AddressableFadeTransition>();
 }
 
 Color esp_color_from_light_color_values(LightColorValues val) {

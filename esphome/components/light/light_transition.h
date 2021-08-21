@@ -11,6 +11,8 @@ class LightState;
 /// Base class for light transitions.
 class LightTransition {
  public:
+  explicit LightTransition(std::string name) : name_(std::move(name)) {}
+
   void setup(LightState *state, const LightColorValues &start_values, const LightColorValues &target_values,
              uint32_t length) {
     this->state_ = state;
@@ -41,9 +43,13 @@ class LightTransition {
 
   const LightColorValues &get_target_values() const { return this->target_values_; }
 
+  const std::string &get_name() { return this->name_; }
+
  protected:
   /// The progress of this transition, on a scale of 0 to 1.
   float get_progress_() { return clamp((millis() - this->start_time_) / float(this->length_), 0.0f, 1.0f); }
+
+  std::string name_;
 
   uint32_t start_time_;
   uint32_t length_;
