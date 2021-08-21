@@ -72,6 +72,7 @@ class AddressableLight : public LightOutput, public Component {
   void call_setup() override;
 
  protected:
+  friend class AddressableCascadeTransition;
   friend class AddressableFadeTransition;
 
   bool should_show_() const { return this->effect_active_ || this->next_show_; }

@@ -2,15 +2,19 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 
 from esphome.util import Registry
-from esphome.const import CONF_NAME, CONF_LAMBDA, CONF_UPDATE_INTERVAL
+from esphome.const import CONF_NAME, CONF_LAMBDA, CONF_UPDATE_INTERVAL, CONF_REVERSED
 from .types import (
     AddressableLight,
     LightColorValues,
     FadeTransition,
     LambdaTransition,
+    AddressableCascadeTransition,
     AddressableFadeTransition,
     AddressableLambdaTransition,
 )
+
+CONF_GROUP_SIZE = "group_size"
+CONF_FADE_LENGTH = "fade_length"
 
 OUTPUT_TRANSITIONS = {}
 
@@ -64,6 +68,27 @@ async def lambda_transition_to_code(config, transition_id):
     )
     return cg.new_Pvariable(
         transition_id, config[CONF_NAME], config[CONF_UPDATE_INTERVAL], lambda_
+    )
+
+
+@register_output_transition(
+    AddressableLight,
+    "addressable_cascade",
+    AddressableCascadeTransition,
+    "Cascade",
+    {
+        cv.Optional(CONF_GROUP_SIZE, default=1): cv.positive_not_null_int,
+        cv.Optional(CONF_FADE_LENGTH, default=0): cv.positive_time_period_milliseconds,
+        cv.Optional(CONF_REVERSED, default=False): cv.boolean,
+    },
+)
+async def addressable_cascade_transition_to_code(config, transition_id):
+    return cg.new_Pvariable(
+        transition_id,
+        config[CONF_NAME],
+        config[CONF_GROUP_SIZE],
+        config[CONF_FADE_LENGTH],
+        config[CONF_REVERSED],
     )
 
 

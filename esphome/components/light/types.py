@@ -84,6 +84,9 @@ LambdaTransition = light_ns.class_("LambdaTransition", LightTransition)
 AddressableLightTransition = light_ns.class_(
     "AddressableLightTransition", LightTransition
 )
+AddressableCascadeTransition = light_ns.class_(
+    "AddressableCascadeTransition", AddressableLightTransition
+)
 AddressableFadeTransition = light_ns.class_(
     "AddressableFadeTransition", AddressableLightTransition
 )

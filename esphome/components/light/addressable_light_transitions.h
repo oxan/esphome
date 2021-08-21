@@ -15,6 +15,60 @@ class AddressableLightTransition : public LightTransition {
   AddressableLight &get_addressable_() const { return *(AddressableLight *) this->state_->get_output(); }
 };
 
+class AddressableCascadeTransition : public AddressableLightTransition {
+ public:
+  AddressableCascadeTransition(const std::string &name, uint32_t fade_length, uint16_t group_size, bool reverse)
+      : AddressableLightTransition(name), fade_length_{fade_length}, group_size_{group_size}, reverse_{reverse} {}
+
+  void start() override {
+    // our transition will handle brightness, disable brightness in correction.
+    this->get_addressable_().correction_.set_local_brightness(255);
+
+    this->group_count_ = this->get_addressable_().size() / this->group_size_;
+    this->fade_duration_ =
+        this->fade_length_ > 0.0f ? clamp((float) this->fade_length_ / this->length_, 0.0f, 1.0f) : 0.25f;
+    this->start_ = esp_color_from_light_color_values(this->get_start_values());
+    this->start_ *= this->start_values_.is_on() ? to_uint8_scale(this->target_values_.get_brightness()) : 0;
+    this->target_ = esp_color_from_light_color_values(this->get_target_values());
+    this->target_ *= this->target_values_.is_on() ? to_uint8_scale(this->target_values_.get_brightness()) : 0;
+  }
+
+  optional<LightColorValues> apply() override {
+    AddressableLight &it = this->get_addressable_();
+    float progress = this->get_progress_();
+
+    for (uint16_t group = 0; group < this->group_count_; group++) {
+      float group_start = (float) group / (this->group_count_ - 1) * (1.0f - this->fade_duration_);
+      float group_progress = clamp((progress - group_start) / this->fade_duration_, 0.0f, 1.0f);
+      Color color = this->lerp_(group_progress);
+      if (!this->reverse_)
+        it.range(group * this->group_size_, (group + 1) * this->group_size_) = color;
+      else
+        it.range(it.size() - (group + 1) * this->group_size_, it.size() - group * this->group_size_) = color;
+    }
+
+    it.schedule_show();
+    return {};
+  }
+
+ protected:
+  Color lerp_(float progress) {
+    return Color(esphome::lerp(progress, this->start_.red, this->target_.red),
+                 esphome::lerp(progress, this->start_.green, this->target_.green),
+                 esphome::lerp(progress, this->start_.blue, this->target_.blue),
+                 esphome::lerp(progress, this->start_.white, this->target_.white));
+  }
+
+  uint32_t fade_length_{0};
+  uint16_t group_size_{1};
+  bool reverse_{false};
+
+  uint16_t group_count_;
+  float fade_duration_;
+  Color start_;
+  Color target_;
+};
+
 class AddressableFadeTransition : public AddressableLightTransition {
  public:
   explicit AddressableFadeTransition(const std::string &name) : AddressableLightTransition(name) {}
