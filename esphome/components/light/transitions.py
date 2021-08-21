@@ -86,8 +86,8 @@ async def addressable_cascade_transition_to_code(config, transition_id):
     return cg.new_Pvariable(
         transition_id,
         config[CONF_NAME],
-        config[CONF_GROUP_SIZE],
         config[CONF_FADE_LENGTH],
+        config[CONF_GROUP_SIZE],
         config[CONF_REVERSED],
     )
 
