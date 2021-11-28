@@ -120,6 +120,12 @@ void AddressableLightTransformer::start() {
   // clear effect data
   for (auto led : this->light_)
     led.set_effect_data(0);
+
+  auto corr = this->light_.correction_.get_max_brightness();
+  ESP_LOGD("transition", "start | gamma=%.2f | correction=%02X %02X %02X %02X", this->light_.state_parent_->get_gamma_correct(), corr.red, corr.green, corr.blue, corr.white);
+  ESP_LOGD("transition", "lcv | state=%.3f | bright=%.3f | color=%.3f | rgb=%.3f %.3f %.3f %.3f", end_values.get_state(), end_values.get_brightness(), end_values.get_color_brightness(), end_values.get_red(), end_values.get_green(), end_values.get_blue(), end_values.get_white());
+  ESP_LOGD("transition", "target | rgb=%02X %02X %02X %02X", this->target_color_.red, this->target_color_.green, this->target_color_.blue, this->target_color_.white);
+  ESP_LOGD("transition", "initial | state=%02X %02X %02X %02X | raw=%02X %02X %02X %02X | effect=%04X", this->light_[0].get_red(), this->light_[0].get_green(), this->light_[0].get_blue(), this->light_[0].get_white(), this->light_[0].get_red_raw(), this->light_[0].get_green_raw(), this->light_[0].get_blue_raw(), this->light_[0].get_white_raw(), this->light_[0].get_effect_data());
 }
 
 optional<LightColorValues> AddressableLightTransformer::apply() {
@@ -152,6 +158,8 @@ optional<LightColorValues> AddressableLightTransformer::apply() {
     led.set_white(w >> 8);
     led.set_effect_data(state);
   }
+
+  ESP_LOGD("transition", "iter | last=%.4f progress=%.4f | state=%02X %02X %02X %02X | raw=%02X %02X %02X %02X | effect=%04X", this->last_transition_progress_, smoothed_progress, this->light_[0].get_red(), this->light_[0].get_green(), this->light_[0].get_blue(), this->light_[0].get_white(), this->light_[0].get_red_raw(), this->light_[0].get_green_raw(), this->light_[0].get_blue_raw(), this->light_[0].get_white_raw(), this->light_[0].get_effect_data());
 
   this->last_transition_progress_ = smoothed_progress;
   this->light_.schedule_show();

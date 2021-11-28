@@ -9,6 +9,7 @@ class ESPColorCorrection {
  public:
   ESPColorCorrection() : max_brightness_(255, 255, 255, 255) {}
   void set_max_brightness(const Color &max_brightness) { this->max_brightness_ = max_brightness; }
+  Color get_max_brightness() { return this->max_brightness_; }
   void set_local_brightness(uint8_t local_brightness) { this->local_brightness_ = local_brightness; }
   void calculate_gamma_table(float gamma);
   inline Color color_correct(Color color) const ALWAYS_INLINE {
