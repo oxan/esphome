@@ -168,6 +168,11 @@ async def to_code(config):
         [f"platformio/framework-arduinoespressif8266 @ {conf[CONF_SOURCE]}"],
     )
 
+    # TODO version check
+    if not conf[CONF_VERSION].startswith("3."):
+        cg.add_platformio_option("platform_packages", ["toolchain-xtensa @ ~2.100300.0"])
+        cg.add_build_flag("-std=gnu++17")
+
     # Default for platformio is LWIP2_LOW_MEMORY with:
     #  - MSS=536
     #  - LWIP_FEATURES enabled

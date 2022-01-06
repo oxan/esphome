@@ -114,7 +114,7 @@ RECOMMENDED_ARDUINO_FRAMEWORK_VERSION = cv.Version(1, 0, 6)
 # The platformio/espressif32 version to use for arduino frameworks
 #  - https://github.com/platformio/platform-espressif32/releases
 #  - https://api.registry.platformio.org/v3/packages/platformio/platform/espressif32
-ARDUINO_PLATFORM_VERSION = cv.Version(3, 3, 2)
+ARDUINO_PLATFORM_VERSION = cv.Version(3, 4, 0)
 
 # The default/recommended esp-idf framework version
 #  - https://github.com/espressif/esp-idf/releases
@@ -123,7 +123,7 @@ RECOMMENDED_ESP_IDF_FRAMEWORK_VERSION = cv.Version(4, 3, 0)
 # The platformio/espressif32 version to use for esp-idf frameworks
 #  - https://github.com/platformio/platform-espressif32/releases
 #  - https://api.registry.platformio.org/v3/packages/platformio/platform/espressif32
-ESP_IDF_PLATFORM_VERSION = cv.Version(3, 3, 2)
+ESP_IDF_PLATFORM_VERSION = cv.Version(3, 4, 0)
 
 
 def _arduino_check_versions(value):
@@ -340,6 +340,12 @@ async def to_code(config):
             "platform_packages",
             [f"platformio/framework-arduinoespressif32 @ {conf[CONF_SOURCE]}"],
         )
+
+        # TODO version check
+        if not conf[CONF_VERSION].startswith("2."):
+            cg.add_platformio_option("platform_packages", ["toolchain-xtensa32 @ ~2.80400.0"])
+        # always set this
+        cg.add_build_flag("-std=gnu++17")
 
         cg.add_platformio_option("board_build.partitions", "partitions.csv")
 
